@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Film Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2a6e00">
+<title>Film Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f5f2; --bg2: #ffffff; --bg3: #f0efe9; --bg4: #e8e7e0;
+    --border: #dddcd5; --border2: #c8c7c0;
+    --text: #1a1a18; --text2: #555550; --text3: #999990;
+    --accent: #2a6e00; --accent2: #1e5200;
+    --green: #1a7a3a; --green-bg: rgba(26,122,58,0.1);
+    --amber: #a05a00; --amber-bg: rgba(160,90,0,0.1);
+    --red: #b83030; --red-bg: rgba(184,48,48,0.1);
+    --blue: #1a5fa0; --blue-bg: rgba(26,95,160,0.1);
+    --sup-swains-bg: #e8f0ff; --sup-swains: #2255cc;
+    --sup-dupli-bg: #e8f5ee; --sup-dupli: #1a7a3a;
+    --sup-ilford-bg: #f0e8ff; --sup-ilford: #6a30b0;
+    --sup-sjf-bg: #fff4e0; --sup-sjf: #a05a00;
+    --sup-lomo-bg: #ffe8e8; --sup-lomo: #b83030;
+    --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--bg2); border-bottom: 2px solid var(--border);
+    padding: 12px 16px; position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .header-title { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; padding: 12px 16px 0; }
+  .tab {
+    background: var(--bg2); border: 1.5px solid var(--border); color: var(--text2);
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    padding: 7px 16px; border-radius: 5px; cursor: pointer; flex: 1; text-align: center;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* SEARCH */
+  .search-bar { padding: 10px 16px 0; position: relative; }
+  .search-bar input {
+    width: 100%; background: var(--bg2); border: 1.5px solid var(--border);
+    color: var(--text); font-family: var(--sans); font-size: 14px;
+    padding: 9px 36px 9px 14px; border-radius: 6px;
+  }
+  .search-bar input:focus { outline: none; border-color: var(--accent); }
+  .search-clear {
+    position: absolute; right: 26px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; display: none;
+  }
+
+  /* SORT */
+  .sort-bar { display: flex; gap: 8px; padding: 8px 16px 0; }
+  .sort-btn {
+    background: var(--bg2); border: 1.5px solid var(--border); color: var(--text2);
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 5px; cursor: pointer; flex: 1;
+    transition: all 0.15s;
+  }
+  .sort-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* CARDS */
+  .cards { padding: 12px 16px; }
+  .card {
+    background: var(--bg2); border: 1.5px solid var(--border); border-radius: 8px;
+    margin-bottom: 7px; overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .card-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .card-body { padding: 8px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .card-row { display: flex; align-items: center; justify-content: space-between; }
+  .card-label { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; min-width: 72px; }
+  .card-val { font-family: var(--mono); font-size: 13px; color: var(--text); text-align: right; }
+  .card-divider { height: 1px; background: var(--border); margin: 3px 0; }
+
+  /* FORMAT BADGE */
+  .fmt-badge { font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; }
+  .fmt-35mm    { background: var(--blue-bg); color: var(--blue); }
+  .fmt-120     { background: var(--green-bg); color: var(--green); }
+  .fmt-instax  { background: var(--amber-bg); color: var(--amber); }
+  .fmt-polaroid{ background: var(--red-bg); color: var(--red); }
+  .fmt-camera  { background: var(--blue-bg); color: var(--blue); }
+
+  /* PROFIT BADGES */
+  .profit { display: inline-flex; align-items: center; gap: 4px; }
+  .badge-green { background: var(--green-bg); color: var(--green); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+  .badge-red   { background: var(--red-bg);   color: var(--red);   font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+  .margin { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+  /* NAS best highlight */
+  .nas-best-val { color: var(--green); font-weight: 500; }
+
+  /* SUPPLIER BADGE */
+  .sup-badge { text-align: center; }
+
+  /* COMPARE specific */
+  .saving-val { color: var(--green); font-family: var(--mono); font-size: 13px; font-weight: 500; }
+
+  /* COMPACT CARD LAYOUT */
+  .card-body { padding: 8px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .price-group { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .price-tag { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .price-input-mini {
+    background: var(--bg3); border: 1.5px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    padding: 4px 6px; border-radius: 5px; width: 80px; text-align: right;
+    -moz-appearance: textfield;
+  }
+  .price-input-mini::-webkit-outer-spin-button,
+  .price-input-mini::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .price-input-mini:focus { outline: none; border-color: var(--accent); background: #f0f8e8; }
+  .price-best-a { border-color: var(--sup-swains) !important; background: var(--sup-swains-bg) !important; color: var(--sup-swains) !important; }
+  .price-best-b { border-color: var(--sup-dupli) !important; background: var(--sup-dupli-bg) !important; color: var(--sup-dupli) !important; }
+  .price-sell-mini { border-color: var(--accent) !important; background: rgba(42,110,0,0.06) !important; color: var(--accent) !important; font-weight: 600; }
+  .mono-muted { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+
+  .profit-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 6px; }
+  .profit-item { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .pb-label { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
+  .pb-green { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--green); background: var(--green-bg); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .pb-amber { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--amber); background: var(--amber-bg); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .pb-red   { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--red);   background: var(--red-bg);   padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .pb-pct { font-size: 10px; opacity: 0.75; }
+  .pb-dot { color: var(--border2); font-size: 12px; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-family: var(--mono); font-size: 13px; }
+  .sup-swains     { background: var(--sup-swains-bg); color: var(--sup-swains); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-dupli      { background: var(--sup-dupli-bg);  color: var(--sup-dupli);  font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-ilford     { background: var(--sup-ilford-bg); color: var(--sup-ilford); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-sjf        { background: var(--sup-sjf-bg);    color: var(--sup-sjf);    font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-lomography { background: var(--sup-lomo-bg);   color: var(--sup-lomo);   font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-title">▣ FILM TRACKER</span>
+
+  <div style="display:flex;gap:6px;width:100%;">
+    <button onclick="exportData()" style="flex:1;background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;padding:8px;border-radius:5px;cursor:pointer;">⬆ Export</button>
+    <label style="flex:1;background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:12px;font-weight:500;padding:8px;border-radius:5px;cursor:pointer;text-align:center;">⬇ Import<input type="file" accept=".json" onchange="importData(this)" style="display:none;"></label>
+  </div>
+</div>
+<div id="ts-bar" style="background:var(--bg3);border-bottom:1px solid var(--border);padding:5px 16px;font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;gap:0;flex-wrap:wrap;"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="setView('key',this)">⊞ Key info</button>
+  <button class="tab" onclick="setView('compare',this)">⇄ Compare</button>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Search products…" oninput="onSearch(this.value)">
+  <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+</div>
+<div class="sort-bar">
+  <button class="sort-btn" id="sort-alpha" onclick="cycleAlpha()">A→Z</button>
+  <button class="sort-btn" id="sort-profit" onclick="cycleProfit()">£↕ Profit</button>
+</div>
+
+<div class="cards" id="cards"></div>
+
+<script>
+// ── DATA ──
+const products = [
+  { format:'35mm', name:'Fomapan 400 (24)',       nasA:3.29,  nasB:2.99,  sell:6.99,   stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fomapan 200 (36)',        nasA:3.99,  nasB:3.84,  sell:6.99,   stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Kentmere 100 (24)',       nasA:3.458, nasB:3.458, sell:5.99,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Kentmere 400 (24)',       nasA:3.458, nasB:3.458, sell:5.99,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Colorplus 200 (24)',      nasA:5.47, nasB:5.445, sell:9.99,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford HP5 (36)',         nasA:6.181, nasB:6.181, sell:9.5,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'9.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Gold 200 (36)',           nasA:6.99,  nasB:6.99,  sell:9.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'11.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Gold 200 (36) 3-pack',   nasA:19.2, nasB:19.2, sell:35.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'29.00', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford XP2 400 (36)',    nasA:7.051, nasB:7.051, sell:6.99,  stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fuji 200',                nasA:8.11,  nasB:8.143,  sell:12.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ultramax 400 (36)',       nasA:7.876, nasB:7.876, sell:11.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'13.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 800',             nasA:8.21,  nasB:9.502,  sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fuji 400',                nasA:9.2,  nasB:8.848,  sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160 (120)',        nasA:10.506, nasB:10.62, sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Phoenix 200',             nasA:8.69,  nasB:8.69,  sell:12.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160',              nasA:11.294,  nasB:11.43,  sell:15.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Funsaver 800 (27)',       nasA:10.06, nasB:10.16, sell:16.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400 (120)',        nasA:10.952,nasB:56.78,sell:16.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Quicksnap 400',           nasA:11.4, nasB:11.4, sell:18.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Funsaver 800 (39)',       nasA:11.65, nasB:11.7, sell:19.0,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400',              nasA:12.97, nasB:12.962, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 800T',          nasA:13.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 800T (120)',    nasA:14.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Proimage 100',            nasA:8.054, nasB:8.054, sell:12.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Kentmere 100 (120)',      nasA:3.917, nasB:3.917, sell:6.5,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Kentmere 400 (120)',      nasA:3.917, nasB:3.917, sell:6.5,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford HP5 (120)',        nasA:5.245, nasB:5.245, sell:7.99,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'8.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Gold 200 (120)',          nasA:7.248, nasB:7.244, sell:11.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Phoenix 200 (120)',       nasA:7.48,  nasB:7.48,  sell:10.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Portra 160 (120)',        nasA:10.506, nasB:10.62, sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Portra 400 (120)',        nasA:10.952,nasB:56.78,sell:16.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Cinestill 800T (120)',    nasA:14.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Cinestill 400D (120)',    nasA:13.99,     nasB:12.0,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ektar 100 (120) 5 pack',  nasA:52.23,    nasB:52.92,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Gold 200 (120) 5 pack',   nasA:36.24,    nasB:36.22,     sell:54.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 200',             nasA:0,     nasB:9.315,     sell:11.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 400',             nasA:0,     nasB:9.375,     sell:12.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 400D',          nasA:14.06,     nasB:12.0,     sell:18.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Colorplus 200 (36)',      nasA:6.55,     nasB:6.543,     sell:9.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fomapan 400 (36)',        nasA:3.99,     nasB:3.84,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Fomapan 200 (120)',       nasA:3.79,     nasB:3.73,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Fomapan 400 (120)',       nasA:3.79,     nasB:3.73,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160 (5 pack)',     nasA:52.53,     nasB:53.1,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400 (5 pack)',     nasA:64.85,     nasB:64.81,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Proimage 100 (5 pack)',   nasA:0,     nasB:0,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ektar 100',               nasA:11.74,     nasB:11.88,     sell:17.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'18.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ektar 100 (120)',          nasA:10.446,     nasB:10.584,     sell:13.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 100',          nasA:0,     nasB:0,     sell:11.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 100 (3 pack)', nasA:0,     nasB:0,     sell:29.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 400',          nasA:0,     nasB:0,     sell:15.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 400 (3 pack)', nasA:0,     nasB:0,     sell:39.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 800',          nasA:0,     nasB:0,     sell:18.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 800 (3 pack)', nasA:0,     nasB:0,     sell:49.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Metropolis',         nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Purple',             nasA:0,     nasB:0,     sell:11.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Turquoise',          nasA:0,     nasB:0,     sell:12.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo 92',                 nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo 92 Sun-Kissed',      nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford FP4 125',          nasA:0,     nasB:0,     sell:10.5,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford FP4 125 (120)',    nasA:0,     nasB:0,     sell:7.99,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'8.49', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford Delta 3200',       nasA:0,     nasB:0,     sell:13.5,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford Delta 3200 (120)', nasA:0,     nasB:0,     sell:0,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 800',              nasA:14.33,     nasB:14.404,     sell:21.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'21.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lucky 200',               nasA:0,     nasB:0,     sell:10.5,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'instax', name:'Instax Mini (10 shots)', nasA:0,    nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'instax', name:'Instax Mini (20 shots)', nasA:0,    nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'polaroid', name:'Polaroid 600',          nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'polaroid', name:'Polaroid i-Type',       nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'camera',   name:'Kodak M35',             nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'camera',   name:'Lomography Apparat',    nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+];
+
+const STORAGE_KEY = 'filmTrackerProducts_v4';
+const SUP_KEY     = 'filmTrackerSuppliers_v1';
+const EDIT_KEY    = 'filmTrackerLastEdit';
+const SYNC_KEY    = 'filmTrackerLastSync';
+
+function fmtTime(iso) {
+  if (!iso) return 'never';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+         d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+function updateTimestampBar() {
+  const el = document.getElementById('ts-bar');
+  if (!el) return;
+  const edit = localStorage.getItem(EDIT_KEY);
+  const sync = localStorage.getItem(SYNC_KEY);
+  el.innerHTML = '<span>✏️ ' + fmtTime(edit) + '</span><span style="margin-left:12px;">🔄 ' + fmtTime(sync) + '</span>';
+}
+let currentView = 'key';
+let searchQuery = '';
+
+function supColourClass(name) {
+  const map = {
+    'Swains': 'sup-swains', 'Dupli': 'sup-dupli',
+    'Ilford': 'sup-ilford', 'SJF': 'sup-sjf', 'Lomography': 'sup-lomography'
+  };
+  return map[name] || 'sup-swains';
+}
+function supA() { return 'Swains'; }
+function supB() { return 'Dupli'; }
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    localStorage.setItem(EDIT_KEY, new Date().toISOString());
+    updateTimestampBar();
+  } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const merged = [];
+      const maxLen = Math.max(products.length, parsed.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < parsed.length && i < products.length) merged.push(Object.assign({}, products[i], parsed[i]));
+        else if (i < parsed.length) merged.push(parsed[i]);
+      }
+      products.length = 0;
+      merged.forEach(p => products.push(p));
+    }
+
+  } catch(e) {}
+}
+
+function activeNas(p) {
+  const aOK = p.hasSupA !== false;
+  const bOK = p.hasSupB !== false;
+  if (p.supplierChoice === 'A' && aOK) return p.nasA;
+  if (p.supplierChoice === 'B' && bOK) return p.nasB;
+  if (aOK && bOK) return Math.min(p.nasA, p.nasB);
+  if (aOK) return p.nasA;
+  if (bOK) return p.nasB;
+  return p.nasA;
+}
+
+function profitClass(p) {
+  if (p >= 3) return 'green';
+  if (p >= 0.5) return 'amber';
+  return 'red';
+}
+
+function profitBadge(profit, margin) {
+  const cls = profitClass(profit);
+  const sign = profit < 0 ? '-' : '';
+  return `<span class="badge-${cls}">${sign}£${Math.abs(profit).toFixed(2)}</span> <span class="margin">${margin.toFixed(1)}%</span>`;
+}
+
+function fmtClass(fmt) {
+  const map = { '35mm':'fmt-35mm', '120':'fmt-120', 'instax':'fmt-instax', 'polaroid':'fmt-polaroid', 'camera':'fmt-camera' };
+  return map[fmt] || 'fmt-35mm';
+}
+
+let sortMode = 'price'; // 'price' | 'az' | 'za' | 'profit-high' | 'profit-low'
+
+function getStdProfit(p) {
+  const nas = activeNas(p);
+  return p.sell > 0 ? (p.sell / 1.20) - nas : -Infinity;
+}
+
+function getBaseName(name) {
+  return name
+    .replace(/\s*\(120\)/gi, '').replace(/\s*\(35mm\)/gi, '')
+    .replace(/\s*\(5\s*pack\)/gi, '').replace(/\s*5\s*pack/gi, '')
+    .replace(/\s*\(24\)/gi, '').replace(/\s*\(36\)/gi, '').trim();
+}
+function formatOrder(fmt) { return fmt === '120' ? 0 : fmt === '35mm' ? 1 : 2; }
+function packOrder(name)   { return /5\s*pack/i.test(name) ? 1 : 0; }
+
+function getFiltered() {
+  let data = products.map((p, i) => ({ ...p, _idx: i }));
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    data = data.filter(p => p.name.toLowerCase().includes(q) || p.format.toLowerCase().includes(q));
+  }
+  if (sortMode === 'az')          return data.sort((a, b) => a.name.localeCompare(b.name));
+  if (sortMode === 'za')          return data.sort((a, b) => b.name.localeCompare(a.name));
+  if (sortMode === 'profit-high') return data.sort((a, b) => getStdProfit(b) - getStdProfit(a));
+  if (sortMode === 'profit-low')  return data.sort((a, b) => getStdProfit(a) - getStdProfit(b));
+
+  // Default: group by base name, 120 before 35mm, single before 5-pack, groups by cheapest sell
+  const groups = {};
+  data.forEach(p => {
+    const base = getBaseName(p.name);
+    if (!groups[base]) groups[base] = { items: [], minSell: Infinity };
+    groups[base].items.push(p);
+    if (p.sell > 0 && p.sell < groups[base].minSell) groups[base].minSell = p.sell;
+  });
+  Object.values(groups).forEach(g => {
+    g.items.sort((a, b) => {
+      const fd = formatOrder(a.format) - formatOrder(b.format);
+      return fd !== 0 ? fd : packOrder(a.name) - packOrder(b.name);
+    });
+  });
+  return Object.values(groups).sort((a, b) => a.minSell - b.minSell).flatMap(g => g.items);
+}
+
+function cycleAlpha() {
+  sortMode = sortMode === 'az' ? 'za' : 'az';
+  updateSortBtns(); render();
+}
+function cycleProfit() {
+  sortMode = sortMode === 'profit-high' ? 'profit-low' : 'profit-high';
+  updateSortBtns(); render();
+}
+function updateSortBtns() {
+  const ab = document.getElementById('sort-alpha');
+  const pb = document.getElementById('sort-profit');
+  ab.textContent = sortMode === 'az' ? 'A→Z' : sortMode === 'za' ? 'Z→A' : 'A→Z';
+  pb.textContent = sortMode === 'profit-high' ? '£↓ Most' : sortMode === 'profit-low' ? '£↑ Least' : '£↕ Profit';
+  ab.classList.toggle('active', sortMode === 'az' || sortMode === 'za');
+  pb.classList.toggle('active', sortMode === 'profit-high' || sortMode === 'profit-low');
+}
+
+function mUpdateNasA(i, val) { products[i].nasA = parseFloat(val) || 0; saveData(); render(); }
+function mUpdateNasB(i, val) { products[i].nasB = parseFloat(val) || 0; saveData(); render(); }
+function mUpdateSell(i, val) { products[i].sell = parseFloat(val) || 0; saveData(); render(); }
+function mUpdateComp(i, field, val) { products[i][field] = val; saveData(); }
+function mUpdateNote(i, val) { products[i].notes = val; saveData(); }
+
+function renderKey() {
+  const data = getFiltered();
+  if (!data.length) return '<div class="empty">No products found</div>';
+  return data.map(p => {
+    const i = p._idx;
+    const nas = activeNas(p);
+    const stdP = (p.sell / 1.20) - nas;
+    const stdM = (stdP / (p.sell / 1.20)) * 100;
+    const cashP = (p.sell * 0.9) - nas;
+    const cashM = (cashP / (p.sell * 0.9)) * 100;
+    const onlineP = (p.sell * 0.9 / 1.20) - nas;
+    const onlineM = (onlineP / (p.sell * 0.9 / 1.20)) * 100;
+    const netPL = (p.sell / 1.20) - (nas * 1.20);
+
+    const autoSup = (p.hasSupA !== false && p.hasSupB !== false) ? (p.nasA < p.nasB ? 'A' : 'B') : (p.hasSupA !== false ? 'A' : 'B');
+    const activeSup = p.supplierChoice || autoSup;
+    const supName = activeSup === 'A' ? (p.supNameA || supA()) : (p.supNameB || supB());
+    const labelA = p.supNameA || supA();
+    const labelB = p.supNameB || supB();
+
+    const nasAInput = p.hasSupA !== false
+      ? `<input type="number" class="price-input-mini ${p.nasA < p.nasB ? 'price-best-a' : ''}" value="${p.nasA.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasA(${i},this.value)" />`
+      : '<span class="mono-muted">—</span>';
+    const nasBInput = p.hasSupB !== false
+      ? `<input type="number" class="price-input-mini ${p.nasB < p.nasA ? 'price-best-b' : ''}" value="${p.nasB.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasB(${i},this.value)" />`
+      : '<span class="mono-muted">—</span>';
+
+    const pBadge = (profit, margin) => {
+      const cls = profit >= 3 ? 'green' : profit >= 0.5 ? 'amber' : 'red';
+      const sign = profit < 0 ? '-' : '';
+      return `<span class="pb-${cls}">${sign}£${Math.abs(profit).toFixed(2)} <span class="pb-pct">${margin.toFixed(0)}%</span></span>`;
+    };
+
+    return `<div class="card">
+      <div class="card-header">
+        <span class="fmt-badge ${fmtClass(p.format)}">${p.format}</span>
+        <span class="card-name">${p.name}</span>
+        <span class="${supColourClass(supName)}" style="font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap;">${supName}</span>
+      </div>
+      <div class="card-body">
+        <div class="price-row">
+          <div class="price-group">
+            <span class="price-tag">${labelA}</span>${nasAInput}
+          </div>
+          <div class="price-group">
+            <span class="price-tag">${labelB}</span>${nasBInput}
+          </div>
+          <div class="price-group" style="margin-left:10px;border-left:2px solid var(--border);padding-left:10px;">
+            <span class="price-tag" style="color:var(--accent);">Sell</span>
+            <input type="number" class="price-input-mini price-sell-mini" value="${p.sell.toFixed(2)}" step="0.01" min="0" onchange="mUpdateSell(${i},this.value)" />
+          </div>
+          <div class="price-group" style="margin-left:auto;">
+            <span class="price-tag">Comp</span>
+            <input type="number" class="price-input-mini" value="${p.compPrice || ''}" step="0.01" min="0" placeholder="—" onchange="mUpdateComp(${i},'compPrice',this.value)" style="width:70px;" />
+          </div>
+          <div class="price-group">
+            <span class="price-tag">Shop</span>
+            <input type="text" class="price-input-mini" value="${p.compShop || ''}" placeholder="—" onchange="mUpdateComp(${i},'compShop',this.value)" style="width:65px;font-family:var(--sans);" />
+          </div>
+        </div>
+        <div class="profit-row">
+          <div class="profit-item"><span class="pb-label">Std</span>${pBadge(stdP, stdM)}</div>
+          <span class="pb-dot">·</span>
+          <div class="profit-item"><span class="pb-label">Cash</span>${pBadge(cashP, cashM)}</div>
+          <span class="pb-dot">·</span>
+          <div class="profit-item"><span class="pb-label">Online</span>${pBadge(onlineP, onlineM)}</div>
+          <span class="pb-dot">·</span>
+          <div class="profit-item"><span class="pb-label">Net P&L</span>${pBadge(netPL, (netPL / (p.sell / 1.20)) * 100)}</div>
+          <input type="text" class="price-input-mini" value="${p.notes || ''}" placeholder="notes…"
+            onchange="mUpdateNote(${i},this.value)"
+            style="margin-left:auto;width:100px;font-family:var(--sans);font-size:11px;color:var(--text2);" />
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCompare() {
+  const data = getFiltered();
+  if (!data.length) return '<div class="empty">No products found</div>';
+  return data.map(p => {
+    const aOK = p.hasSupA !== false;
+    const bOK = p.hasSupB !== false;
+    const labelA = p.supNameA || supA();
+    const labelB = p.supNameB || supB();
+    const cheaper = aOK && bOK ? (p.nasA < p.nasB ? labelA : labelB) : (aOK ? labelA : labelB);
+    const saving = (aOK && bOK) ? Math.abs(p.nasA - p.nasB) : 0;
+    const nasADisp = aOK ? `£${p.nasA.toFixed(3)}` : '—';
+    const nasBDisp = bOK ? `£${p.nasB.toFixed(3)}` : '—';
+    const costA = aOK ? `£${(p.nasA * 1.2).toFixed(2)}` : '—';
+    const costB = bOK ? `£${(p.nasB * 1.2).toFixed(2)}` : '—';
+
+    return `<div class="card">
+      <div class="card-header">
+        <span class="fmt-badge ${fmtClass(p.format)}">${p.format}</span>
+        <span class="card-name">${p.name}</span>
+        ${saving > 0 ? `<span class="saving-val">save £${saving.toFixed(2)}</span>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-row"><span class="card-label">${labelA}</span><span class="card-val">${nasADisp}</span></div>
+        <div class="card-row"><span class="card-label">${labelB}</span><span class="card-val">${nasBDisp}</span></div>
+        <div class="card-row"><span class="card-label">Cheaper</span>${cheaper !== '—' ? `<span class="${supColourClass(cheaper)}">${cheaper}</span>` : '<span style="color:var(--text3)">—</span>'}</div>
+        <div class="card-divider"></div>
+        <div class="card-row"><span class="card-label">Cost ${labelA}</span><span class="card-val">${costA}</span></div>
+        <div class="card-row"><span class="card-label">Cost ${labelB}</span><span class="card-val">${costB}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function render() {
+  document.getElementById('cards').innerHTML = currentView === 'key' ? renderKey() : renderCompare();
+}
+
+function setView(v, btn) {
+  currentView = v;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function onSearch(val) {
+  searchQuery = val.trim();
+  document.getElementById('search-clear').style.display = searchQuery ? 'block' : 'none';
+  render();
+}
+
+function clearSearch() {
+  searchQuery = '';
+  document.getElementById('search').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  render();
+}
+
+
+
+function exportData() {
+  const payload = {
+    version: 1,
+    exported: new Date().toISOString(),
+    supA: supA(),
+    supB: supB(),
+    products: products
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+  const a = document.createElement('a');
+  a.href = uri;
+  a.download = 'film_tracker_data.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  localStorage.setItem(SYNC_KEY, new Date().toISOString());
+  updateTimestampBar();
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.products || !Array.isArray(payload.products)) {
+        alert('Invalid file — no products found.');
+        return;
+      }
+      products.length = 0;
+      payload.products.forEach(p => products.push(p));
+      if (payload.supA) document.getElementById('supA').value = payload.supA;
+      if (payload.supB) document.getElementById('supB').value = payload.supB;
+      saveData();
+      localStorage.setItem(SYNC_KEY, new Date().toISOString());
+      updateTimestampBar();
+      render();
+      alert('✓ Imported ' + payload.products.length + ' products.');
+    } catch(err) {
+      alert('Could not read file. Make sure it\'s a valid Film Tracker export.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+loadData();
+updateTimestampBar();
+render();
+
+// ── PWA SERVICE WORKER (inline) ──
+const SW_CODE = `
+const CACHE = 'film-tracker-v1';
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('', {status: 503})))
+  );
+});
+`;
+
+if ('serviceWorker' in navigator) {
+  const blob = new Blob([SW_CODE], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+// ── INSTALL BANNER (shown once on first visit) ──
+window.addEventListener('load', () => {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isInstalled = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed = localStorage.getItem('installDismissed');
+
+  if (isIOS && !isInstalled && !dismissed) {
+    const banner = document.createElement('div');
+    banner.style.cssText = `position:fixed;bottom:0;left:0;right:0;background:#1a1a18;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:9999;font-family:-apple-system,sans-serif;font-size:13px;`;
+    banner.innerHTML = `
+      <div style="flex:1">
+        <div style="font-weight:600;margin-bottom:2px;">Add to Home Screen</div>
+        <div style="opacity:0.7;">Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to use like an app</div>
+      </div>
+      <button onclick="this.parentElement.remove();localStorage.setItem('installDismissed','1')"
+        style="background:none;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+        Got it
+      </button>`;
+    document.body.appendChild(banner);
+  }
+});
+</script>
+</body>
+</html>

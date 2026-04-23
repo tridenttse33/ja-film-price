@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Film Price Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f2;
+    --bg2: #ffffff;
+    --bg3: #f0efe9;
+    --bg4: #e8e7e0;
+    --border: #dddcd5;
+    --border2: #c8c7c0;
+    --text: #1a1a18;
+    --text2: #555550;
+    --text3: #999990;
+    --accent: #2a6e00;
+    --accent2: #1e5200;
+    --green: #1a7a3a;
+    --green-bg: rgba(26,122,58,0.1);
+    --amber: #a05a00;
+    --amber-bg: rgba(160,90,0,0.1);
+    --red: #b83030;
+    --red-bg: rgba(184,48,48,0.1);
+    --blue: #1a5fa0;
+    --blue-bg: rgba(26,95,160,0.1);
+    --sup-swains-bg: #e8f0ff; --sup-swains: #2255cc;
+    --sup-dupli-bg: #e8f5ee; --sup-dupli: #1a7a3a;
+    --sup-ilford-bg: #f0e8ff; --sup-ilford: #6a30b0;
+    --sup-sjf-bg: #fff4e0; --sup-sjf: #a05a00;
+    --sup-lomo-bg: #ffe8e8; --sup-lomo: #b83030;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .app-header {
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+    padding: 18px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .header-title {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .supplier-names {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .supplier-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .supplier-input {
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    width: 130px;
+    transition: border-color 0.15s;
+  }
+  .supplier-input:focus { outline: none; border-color: var(--accent); }
+.main { padding: 24px 28px; max-width: 1600px; width: 100%; box-sizing: border-box; }
+
+  /* ── STAT CARDS ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .stat-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+
+  /* ── VIEW TABS ── */
+  .view-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .view-tab {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .view-tab:hover { color: var(--text); border-color: var(--border2); background: var(--bg3); }
+  .view-tab.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    display: block;
+  }
+
+  table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  thead th {
+    background: var(--bg3);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 13px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--bg3); }
+  tbody tr:hover { background: #e8f0ff; }
+
+  td {
+    padding: 13px 14px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .td-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 190px;
+    white-space: nowrap;
+  }
+
+  .td-mono {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .td-muted {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    text-align: right;
+  }
+
+  .inline-input {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    width: 76px;
+    text-align: right;
+    transition: border-color 0.15s;
+  }
+  .inline-input:hover { border-color: var(--border2); }
+  .inline-input:focus { outline: none; border-color: var(--accent); background: #f0f8e8; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(26,122,58,0.2); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(160,90,0,0.2); }
+  .badge-red   { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(184,48,48,0.2); }
+  .badge-blue  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(26,95,160,0.2); }
+  .badge-best  { background: rgba(42,110,0,0.1); color: var(--accent); font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; letter-spacing: 0.06em; border: 1px solid rgba(42,110,0,0.2); }
+  .nas-best { background: var(--green-bg) !important; border-left: 3px solid var(--green); }
+  .nas-best-a { background: var(--blue-bg) !important; border-left: 3px solid var(--blue); }
+  .nas-best-b { background: var(--green-bg) !important; border-left: 3px solid var(--green); }
+  .nas-disabled { background: var(--bg3) !important; opacity: 0.45; }
+  .nas-disabled input[type="text"], .nas-disabled input[type="number"], .nas-disabled textarea { pointer-events: none; }
+  .sup-on-off {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    cursor: pointer;
+    user-select: none;
+    margin-top: 4px;
+  }
+  .sup-on-off input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); width: 13px; height: 13px; }
+
+  /* ── DOT ── */
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .dot-green { background: var(--green); }
+  .dot-amber { background: var(--amber); }
+  .dot-red   { background: var(--red); }
+
+  /* ── STOCK CONTROLS ── */
+  .stock-ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .stock-btn {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 15px;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.12s;
+    padding: 0;
+    font-weight: 500;
+  }
+  .stock-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--accent); }
+
+  .stock-val {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 26px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .stock-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+  .stock-ok  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(26,122,58,0.2); }
+  .stock-low { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(184,48,48,0.2); }
+
+  /* ── COMPETITOR COLUMN ── */
+  .comp-cell { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+  .comp-input-price {
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    width: 80px;
+    transition: border-color 0.15s;
+  }
+  .comp-input-price:focus { outline: none; border-color: var(--red); background: #fff5f5; }
+  .comp-input-shop {
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 130px;
+    transition: border-color 0.15s;
+  }
+  .comp-input-shop::placeholder { color: var(--text3); font-style: italic; }
+  .comp-input-shop:focus { outline: none; border-color: var(--red); }
+  .comp-diff-higher { font-family: var(--mono); font-size: 11px; color: var(--green); font-weight: 500; }
+  .comp-diff-lower  { font-family: var(--mono); font-size: 11px; color: var(--red);   font-weight: 500; }
+  .comp-diff-same   { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  /* ── DELETE BUTTON ── */
+  .delete-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    color: var(--text3);
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    padding: 0;
+  }
+  .delete-btn:hover { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+
+  /* ── SUPPLIER TOGGLE ── */
+  .sup-toggle {
+    display: inline-flex;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .sup-toggle button {
+    background: none;
+    border: none;
+    padding: 3px 9px;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .sup-toggle button:hover { background: var(--bg3); color: var(--text); }
+  .sup-toggle .sup-divider { width: 1px; background: var(--border); flex-shrink: 0; }
+  .auto-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    display: block;
+    margin-top: 2px;
+    text-align: center;
+  }
+
+  /* ── REMARK INPUT ── */
+  .remark-input {
+    display: block;
+    margin-top: 4px;
+    width: 100%;
+    background: var(--bg3);
+    border: 1px dashed var(--border);
+    border-radius: 3px;
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 11px;
+    padding: 3px 6px;
+    resize: none;
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 28px;
+    line-height: 1.4;
+  }
+  .remark-input::placeholder { color: var(--text3); font-style: italic; }
+  .remark-input:focus { outline: none; border-color: var(--amber); background: #fffbf0; border-style: solid; }
+  .remark-input:not(:placeholder-shown) { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); border-style: solid; }
+
+  /* ── COMPARE VIEW ── */
+  .compare-table th, .compare-table td { text-align: right; }
+  .compare-table th:first-child, .compare-table td:first-child { text-align: left; }
+
+  .saving-cell { color: var(--green); font-family: var(--mono); font-size: 13px; font-weight: 500; }
+
+  /* ── MARGIN ── */
+  .margin-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ── EMPTY ── */
+  .empty { padding: 40px; text-align: center; color: var(--text3); font-family: var(--mono); font-size: 14px; }
+
+  /* ── ADD PRODUCT PANEL ── */
+  .add-panel {
+    margin-top: 24px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .add-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1.5px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .add-panel-header:hover { background: var(--bg3); }
+  .add-panel-header.open { border-bottom-color: var(--border); }
+  .add-panel-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .add-panel-chevron {
+    font-size: 16px;
+    color: var(--text3);
+    transition: transform 0.2s;
+    line-height: 1;
+  }
+  .add-panel-chevron.open { transform: rotate(180deg); }
+  .add-panel-body {
+    display: none;
+    padding: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .add-panel-body.open { display: flex; }
+  .add-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .add-field label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .add-field input, .add-field select {
+    background: var(--bg3);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    transition: border-color 0.15s;
+  }
+  .add-field input:focus, .add-field select:focus { outline: none; border-color: var(--accent); background: #f0f8e8; }
+  .add-field input[type="text"] { width: 200px; }
+  .add-field input[type="number"] { width: 100px; }
+  .add-field select { width: 110px; cursor: pointer; }
+  .add-btn {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    align-self: flex-end;
+    margin-bottom: 1px;
+  }
+  .add-btn:hover { background: var(--accent2); }
+  .add-btn:active { transform: scale(0.97); }
+  .add-msg { font-family: var(--mono); font-size: 12px; padding: 4px 0 0; display: none; width: 100%; }
+  .add-msg.error { display: block; color: var(--red); }
+  .add-msg.success { display: block; color: var(--green); }
+  .sup-swains     { background: var(--sup-swains-bg); color: var(--sup-swains); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-dupli      { background: var(--sup-dupli-bg);  color: var(--sup-dupli);  font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-ilford     { background: var(--sup-ilford-bg); color: var(--sup-ilford); font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-sjf        { background: var(--sup-sjf-bg);    color: var(--sup-sjf);    font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+  .sup-lomography { background: var(--sup-lomo-bg);   color: var(--sup-lomo);   font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <span class="header-title">▣ FILM PRICE TRACKER</span>
+
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    <button onclick="exportData()" style="background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;padding:7px 14px;border-radius:5px;cursor:pointer;white-space:nowrap;">⬆ Export data</button>
+    <label style="background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:12px;font-weight:500;padding:7px 14px;border-radius:5px;cursor:pointer;white-space:nowrap;">⬇ Import data<input type="file" accept=".json" onchange="importData(this)" style="display:none;"></label>
+    <button onclick="exportExcel()" style="background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:12px;font-weight:500;padding:7px 14px;border-radius:5px;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
+  </div>
+</div>
+<div id="ts-bar" style="background:var(--bg3);border-bottom:1px solid var(--border);padding:6px 20px;font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;gap:0;flex-wrap:wrap;"></div>
+
+<div class="main">
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; background:var(--bg2); border:1.5px solid var(--border); border-radius:8px; padding:12px 18px; margin-bottom:16px;">
+    <span style="font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">Profit guide</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0;"></span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:500;">£3.00+</span>
+      <span style="font-family:var(--sans);font-size:12px;color:var(--text2);">Good margin</span>
+    </div>
+    <div style="width:1px;height:20px;background:var(--border);"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--amber);display:inline-block;flex-shrink:0;"></span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--amber);font-weight:500;">£0.50 – £2.99</span>
+      <span style="font-family:var(--sans);font-size:12px;color:var(--text2);">Tight margin</span>
+    </div>
+    <div style="width:1px;height:20px;background:var(--border);"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0;"></span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--red);font-weight:500;">Below £0.50</span>
+      <span style="font-family:var(--sans);font-size:12px;color:var(--text2);">Loss / break-even</span>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+    <div class="view-tabs" style="margin-bottom:0;">
+      <button class="view-tab active" onclick="setView('key',this)">⊞ Key info</button>
+      <button class="view-tab" onclick="setView('all',this)">Full view</button>
+      <button class="view-tab" onclick="setView('standard',this)">Standard</button>
+      <button class="view-tab" onclick="setView('cash',this)">Cash</button>
+      <button class="view-tab" onclick="setView('online',this)">Online</button>
+      <button class="view-tab" onclick="setView('compare',this)">Compare suppliers</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div style="position:relative;display:flex;align-items:center;">
+        <span style="position:absolute;left:9px;font-size:13px;color:var(--text3);pointer-events:none;">⌕</span>
+        <input type="text" id="search-input" placeholder="Search products…" oninput="updateSearch(this.value)"
+          style="background:var(--bg2);border:1.5px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 32px 7px 28px;border-radius:5px;width:200px;transition:border-color 0.15s;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+        <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>
+      </div>
+      <button class="view-tab" id="sort-btn" onclick="toggleSort()" style="display:flex;align-items:center;gap:6px;">
+        <span id="sort-icon">A→Z</span>
+        <span id="sort-label">Sort A–Z</span>
+      </button>
+      <button class="view-tab" id="profit-sort-btn" onclick="toggleProfitSort()" style="display:flex;align-items:center;gap:6px;">
+        <span id="profit-sort-icon">£↕</span>
+        <span id="profit-sort-label">Sort by profit</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="formula-legend" style="display:flex;align-items:flex-start;gap:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap;">
+    <span style="font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;padding-top:1px;">Formulas</span>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;flex:1;">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2);"><span style="color:var(--text3);">Std profit:</span> sell ÷ 1.20 − NAS</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2);"><span style="color:var(--text3);">Cash −10%:</span> sell × 0.90 − NAS</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2);"><span style="color:var(--text3);">Online −10%:</span> (sell × 0.90) ÷ 1.20 − NAS</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2);"><span style="color:var(--text3);">Net P&amp;L:</span> (sell ÷ 1.20) − (NAS × 1.20)</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="add-panel">
+    <div class="add-panel-header" id="add-toggle" onclick="toggleAddPanel()">
+      <span class="add-panel-title">+ Add new product</span>
+      <span class="add-panel-chevron" id="add-chevron">&#9660;</span>
+    </div>
+    <div class="add-panel-body" id="add-panel-body">
+      <div class="add-field">
+        <label>Product name</label>
+        <input type="text" id="new-name" placeholder="e.g. Ektar 100 (36)" />
+      </div>
+      <div class="add-field">
+        <label>Format</label>
+        <select id="new-format">
+          <option value="35mm">35mm</option>
+          <option value="120">120</option>
+          <option value="instax">Instax</option>
+          <option value="polaroid">Polaroid</option>
+          <option value="camera">Camera</option>
+        </select>
+      </div>
+      <div class="add-field">
+        <label>NAS &mdash; Sup A (&pound;)</label>
+        <input type="number" id="new-nasA" placeholder="0.00" step="0.001" min="0" />
+      </div>
+      <div class="add-field">
+        <label>NAS &mdash; Sup B (&pound;)</label>
+        <input type="number" id="new-nasB" placeholder="0.00" step="0.001" min="0" />
+      </div>
+      <div class="add-field">
+        <label>Sell price (&pound;)</label>
+        <input type="number" id="new-sell" placeholder="0.00" step="0.01" min="0" />
+      </div>
+      <button class="add-btn" onclick="addProduct()">Add product</button>
+      <div class="add-msg" id="add-msg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ──
+const products = [
+  { format:'35mm', name:'Fomapan 400 (24)',       nasA:3.29,  nasB:2.99,  sell:6.99,   stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fomapan 200 (36)',        nasA:3.99,  nasB:3.84,  sell:6.99,   stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Kentmere 100 (24)',       nasA:3.458, nasB:3.458, sell:5.99,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Kentmere 400 (24)',       nasA:3.458, nasB:3.458, sell:5.99,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Colorplus 200 (24)',      nasA:5.47, nasB:5.445, sell:9.99,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford HP5 (36)',         nasA:6.181, nasB:6.181, sell:9.5,   stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'9.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Gold 200 (36)',           nasA:6.99,  nasB:6.99,  sell:9.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'11.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Gold 200 (36) 3-pack',   nasA:19.2, nasB:19.2, sell:35.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'29.00', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford XP2 400 (36)',    nasA:7.051, nasB:7.051, sell:6.99,  stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fuji 200',                nasA:8.11,  nasB:8.143,  sell:12.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ultramax 400 (36)',       nasA:7.876, nasB:7.876, sell:11.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'13.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 800',             nasA:8.21,  nasB:9.502,  sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fuji 400',                nasA:9.2,  nasB:8.848,  sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160 (120)',        nasA:10.506, nasB:10.62, sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Phoenix 200',             nasA:8.69,  nasB:8.69,  sell:12.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160',              nasA:11.294,  nasB:11.43,  sell:15.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Funsaver 800 (27)',       nasA:10.06, nasB:10.16, sell:16.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400 (120)',        nasA:10.952,nasB:56.78,sell:16.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Quicksnap 400',           nasA:11.4, nasB:11.4, sell:18.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Funsaver 800 (39)',       nasA:11.65, nasB:11.7, sell:19.0,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400',              nasA:12.97, nasB:12.962, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 800T',          nasA:13.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 800T (120)',    nasA:14.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Proimage 100',            nasA:8.054, nasB:8.054, sell:12.5,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Kentmere 100 (120)',      nasA:3.917, nasB:3.917, sell:6.5,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Kentmere 400 (120)',      nasA:3.917, nasB:3.917, sell:6.5,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford HP5 (120)',        nasA:5.245, nasB:5.245, sell:7.99,   stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'8.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Gold 200 (120)',          nasA:7.248, nasB:7.244, sell:11.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Phoenix 200 (120)',       nasA:7.48,  nasB:7.48,  sell:10.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Portra 160 (120)',        nasA:10.506, nasB:10.62, sell:14.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Portra 400 (120)',        nasA:10.952,nasB:56.78,sell:16.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Cinestill 800T (120)',    nasA:14.99, nasB:12.0, sell:18.99,  stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Cinestill 400D (120)',    nasA:13.99,     nasB:12.0,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ektar 100 (120) 5 pack',  nasA:52.23,    nasB:52.92,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Gold 200 (120) 5 pack',   nasA:36.24,    nasB:36.22,     sell:54.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 200',             nasA:0,     nasB:9.315,     sell:11.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Candido 400',             nasA:0,     nasB:9.375,     sell:12.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Cinestill 400D',          nasA:14.06,     nasB:12.0,     sell:18.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Colorplus 200 (36)',      nasA:6.55,     nasB:6.543,     sell:9.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Fomapan 400 (36)',        nasA:3.99,     nasB:3.84,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Fomapan 200 (120)',       nasA:3.79,     nasB:3.73,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Fomapan 400 (120)',       nasA:3.79,     nasB:3.73,     sell:6.99,      stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 160 (5 pack)',     nasA:52.53,     nasB:53.1,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 400 (5 pack)',     nasA:64.85,     nasB:64.81,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Proimage 100 (5 pack)',   nasA:0,     nasB:0,     sell:0,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ektar 100',               nasA:11.74,     nasB:11.88,     sell:17.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'18.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ektar 100 (120)',          nasA:10.446,     nasB:10.584,     sell:13.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 100',          nasA:0,     nasB:0,     sell:11.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 100 (3 pack)', nasA:0,     nasB:0,     sell:29.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 400',          nasA:0,     nasB:0,     sell:15.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 400 (3 pack)', nasA:0,     nasB:0,     sell:39.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 800',          nasA:0,     nasB:0,     sell:18.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomography 800 (3 pack)', nasA:0,     nasB:0,     sell:49.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Metropolis',         nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Purple',             nasA:0,     nasB:0,     sell:11.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo Turquoise',          nasA:0,     nasB:0,     sell:12.5,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo 92',                 nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lomo 92 Sun-Kissed',      nasA:0,     nasB:0,     sell:13.99,      stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford FP4 125',          nasA:0,     nasB:0,     sell:10.5,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford FP4 125 (120)',    nasA:0,     nasB:0,     sell:7.99,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'8.49', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Ilford Delta 3200',       nasA:0,     nasB:0,     sell:13.5,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'120',  name:'Ilford Delta 3200 (120)', nasA:0,     nasB:0,     sell:0,      stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Portra 800',              nasA:14.33,     nasB:14.404,     sell:21.99,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'21.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true },
+  { format:'35mm', name:'Lucky 200',               nasA:0,     nasB:0,     sell:10.5,      stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'instax', name:'Instax Mini (10 shots)', nasA:0,    nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'instax', name:'Instax Mini (20 shots)', nasA:0,    nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'polaroid', name:'Polaroid 600',          nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'polaroid', name:'Polaroid i-Type',       nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'camera',   name:'Kodak M35',             nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+  { format:'camera',   name:'Lomography Apparat',    nasA:0,   nasB:0,     sell:0,          stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true },
+];
+
+let currentView = 'key';
+let sortOrder   = 'default';
+let profitSort  = 'default';
+let searchQuery = '';
+
+function supColourClass(name) {
+  const map = {
+    'Swains': 'sup-swains', 'Dupli': 'sup-dupli',
+    'Ilford': 'sup-ilford', 'SJF': 'sup-sjf', 'Lomography': 'sup-lomography'
+  };
+  return map[name] || 'sup-swains';
+}
+function supAName() { return 'Swains'; }
+function supBName() { return 'Dupli'; }
+
+// ── CALCULATIONS ──
+function calcStandard(nas, sell) {
+  const incomeAfterVAT = sell / 1.20;
+  const profit = incomeAfterVAT - nas;
+  const margin = (profit / incomeAfterVAT) * 100;
+  return { price: sell, income: incomeAfterVAT, profit, margin };
+}
+
+function calcCash(nas, sell) {
+  const cashPrice = sell * 0.90;
+  const profit = cashPrice - nas;
+  const margin = (profit / cashPrice) * 100;
+  return { price: cashPrice, income: cashPrice, profit, margin };
+}
+
+function calcOnline(nas, sell) {
+  const onlinePrice = sell * 0.90;
+  const incomeAfterVAT = onlinePrice / 1.20;
+  const profit = incomeAfterVAT - nas;
+  const margin = (profit / incomeAfterVAT) * 100;
+  return { price: onlinePrice, income: incomeAfterVAT, profit, margin };
+}
+
+// ── COLOUR CODING ──
+function profitClass(p) {
+  if (p >= 3.00)  return 'green';
+  if (p >= 0.50)  return 'amber';
+  return 'red';
+}
+
+function dotClass(nasA, nasB, sell) {
+  const s = calcStandard(nasA, sell);
+  return profitClass(s.profit);
+}
+
+// ── FORMAT HELPERS ──
+function fmt(n)  { return '£' + Math.abs(n).toFixed(2); }
+function fmtS(n) { return (n < 0 ? '-' : '') + '£' + Math.abs(n).toFixed(2); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+
+function profitBadge(profit, margin) {
+  const cls = profitClass(profit);
+  return `<span class="badge badge-${cls}">${fmtS(profit)}</span><span class="margin-val">${fmtPct(margin)}</span>`;
+}
+
+// ── INPUT HANDLERS ──
+function updateName(i, val) {
+  if (val.trim()) products[i].name = val.trim();
+  saveData(); renderStats(); renderTable();
+}
+function updateFormat(i, val) {
+  products[i].format = val;
+  saveData(); renderStats(); renderTable();
+}
+function updateNasA(i, val) {
+  products[i].nasA = parseFloat(val) || 0;
+  saveData(); renderStats(); renderTable();
+}
+function updateNasB(i, val) {
+  products[i].nasB = parseFloat(val) || 0;
+  saveData(); renderStats(); renderTable();
+}
+function updateSell(i, val) {
+  products[i].sell = parseFloat(val) || 0;
+  saveData(); renderStats(); renderTable();
+}
+function updateStock(i, delta) {
+  products[i].stock = Math.max(0, (products[i].stock || 0) + delta);
+  saveData(); renderStats(); renderTable();
+}
+function updateSupplier(i, choice) {
+  products[i].supplierChoice = choice;
+  saveData(); renderStats(); renderTable();
+}
+function updateSupName(i, which, val) {
+  const key = which === 'A' ? 'supNameA' : 'supNameB';
+  products[i][key] = val.trim() || null;
+  saveData(); renderStats(); renderTable();
+}
+function updateRemark(i, which, val) {
+  const key = which === 'A' ? 'remarkA' : 'remarkB';
+  products[i][key] = val;
+  saveData();
+}
+function deleteProduct(i) {
+  const name = products[i].name;
+  const row = document.querySelector(`[data-delete-idx="${i}"]`);
+  if (!row) return;
+  // Replace delete button with inline confirm
+  const cell = row.closest('td');
+  cell.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--red);white-space:nowrap;">Delete?</span>
+      <div style="display:flex;gap:4px;">
+        <button onclick="confirmDelete(${i})" style="background:var(--red);border:none;color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 8px;border-radius:3px;cursor:pointer;">Yes</button>
+        <button onclick="renderTable()" style="background:var(--bg3);border:1.5px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:3px;cursor:pointer;">No</button>
+      </div>
+    </div>`;
+}
+function confirmDelete(i) {
+  products.splice(i, 1);
+  saveData(); renderStats(); renderTable();
+}
+function updateComp(i, field, val) {
+  products[i][field] = val;
+  saveData();
+  if (field === 'compPrice') renderTable();
+}
+function toggleSupplierEnabled(i, which) {
+  const key = which === 'A' ? 'hasSupA' : 'hasSupB';
+  products[i][key] = !products[i][key];
+  saveData();
+  // If disabling the currently chosen supplier, reset to auto
+  if (!products[i][key] && products[i].supplierChoice === which) {
+    products[i].supplierChoice = null;
+  }
+  renderStats(); renderTable();
+}
+function activeNas(p) {
+  const aOK = p.hasSupA !== false;
+  const bOK = p.hasSupB !== false;
+  if (p.supplierChoice === 'A' && aOK) return p.nasA;
+  if (p.supplierChoice === 'B' && bOK) return p.nasB;
+  if (aOK && bOK) return Math.min(p.nasA, p.nasB);
+  if (aOK) return p.nasA;
+  if (bOK) return p.nasB;
+  return p.nasA; // fallback
+}
+
+// ── STATS ──
+function renderStats() {
+  const data = products;
+  const bar  = document.getElementById('stats-bar');
+
+  const totalProducts = data.length;
+  let aProfs = [], bProfs = [], aCheaper = 0, bCheaper = 0, totalStock = 0;
+  let totalStockValue = 0;
+
+  data.forEach(p => {
+    const sa = calcStandard(p.nasA, p.sell);
+    const sb = calcStandard(p.nasB, p.sell);
+    aProfs.push(sa.profit);
+    bProfs.push(sb.profit);
+    if (p.nasA < p.nasB) aCheaper++;
+    else if (p.nasB < p.nasA) bCheaper++;
+    totalStock += (p.stock || 0);
+    const bestNas = Math.min(p.nasA, p.nasB);
+    totalStockValue += bestNas * 1.20 * (p.stock || 0);
+  });
+
+  const avgA = aProfs.reduce((a,b) => a+b, 0) / aProfs.length;
+  const avgB = bProfs.reduce((a,b) => a+b, 0) / bProfs.length;
+
+  bar.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Products</div>
+      <div class="stat-value">${totalProducts}</div>
+      <div class="stat-sub">35mm + 120</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg profit — ${supAName()}</div>
+      <div class="stat-value" style="color:var(--${profitClass(avgA)})">${fmtS(avgA)}</div>
+      <div class="stat-sub">standard sale</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg profit — ${supBName()}</div>
+      <div class="stat-value" style="color:var(--${profitClass(avgB)})">${fmtS(avgB)}</div>
+      <div class="stat-sub">standard sale</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">${supAName()} cheaper</div>
+      <div class="stat-value">${aCheaper}</div>
+      <div class="stat-sub">lines</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">${supBName()} cheaper</div>
+      <div class="stat-value">${bCheaper}</div>
+      <div class="stat-sub">lines</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total stock value</div>
+      <div class="stat-value">£${totalStockValue.toFixed(0)}</div>
+      <div class="stat-sub">cost inc. VAT · ${totalStock} units</div>
+    </div>
+  `;
+}
+
+// ── SORT ──
+function getStdProfit(p) {
+  const nas = activeNas(p);
+  return (p.sell / 1.20) - nas;
+}
+
+function getBaseName(name) {
+  // Strip format/pack suffixes to get the core product name for grouping
+  return name
+    .replace(/\s*\(120\)/gi, '')
+    .replace(/\s*\(35mm\)/gi, '')
+    .replace(/\s*\(5\s*pack\)/gi, '')
+    .replace(/\s*5\s*pack/gi, '')
+    .replace(/\s*\(24\)/gi, '')
+    .replace(/\s*\(36\)/gi, '')
+    .replace(/\s*\(120\)\s*$/gi, '')
+    .trim();
+}
+
+function formatOrder(fmt) {
+  // 120 before 35mm, then others
+  if (fmt === '120') return 0;
+  if (fmt === '35mm') return 1;
+  return 2;
+}
+
+function packOrder(name) {
+  // single pack before 5-pack
+  return /5\s*pack/i.test(name) ? 1 : 0;
+}
+
+function getSortedData() {
+  let data = products.map((p, i) => ({ ...p, _origIndex: i }));
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    data = data.filter(p => p.name.toLowerCase().includes(q) || p.format.toLowerCase().includes(q));
+  }
+  if (profitSort === 'high') return data.sort((a,b) => getStdProfit(b) - getStdProfit(a));
+  if (profitSort === 'low')  return data.sort((a,b) => getStdProfit(a) - getStdProfit(b));
+  if (sortOrder === 'asc')   return data.sort((a,b) => a.name.localeCompare(b.name));
+  if (sortOrder === 'desc')  return data.sort((a,b) => b.name.localeCompare(a.name));
+
+  // Default: group by base name, 120 before 35mm, single before 5-pack, groups ordered by cheapest sell
+  const groups = {};
+  data.forEach(p => {
+    const base = getBaseName(p.name);
+    if (!groups[base]) groups[base] = { items: [], minSell: Infinity };
+    groups[base].items.push(p);
+    if (p.sell > 0 && p.sell < groups[base].minSell) groups[base].minSell = p.sell;
+  });
+
+  // Sort items within each group
+  Object.values(groups).forEach(g => {
+    g.items.sort((a, b) => {
+      const fmtDiff = formatOrder(a.format) - formatOrder(b.format);
+      if (fmtDiff !== 0) return fmtDiff;
+      return packOrder(a.name) - packOrder(b.name);
+    });
+  });
+
+  // Sort groups by their cheapest sell price
+  const sortedGroups = Object.values(groups).sort((a, b) => a.minSell - b.minSell);
+  return sortedGroups.flatMap(g => g.items);
+}
+
+function updateSearch(val) {
+  searchQuery = val.trim();
+  document.getElementById('search-clear').style.display = searchQuery ? 'block' : 'none';
+  renderTable();
+}
+
+function clearSearch() {
+  searchQuery = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  renderTable();
+}
+
+function toggleProfitSort() {
+  const btn   = document.getElementById('profit-sort-btn');
+  const icon  = document.getElementById('profit-sort-icon');
+  const label = document.getElementById('profit-sort-label');
+  // Reset A-Z sort when switching to profit sort
+  sortOrder = 'default';
+  document.getElementById('sort-btn').classList.remove('active');
+  document.getElementById('sort-icon').textContent  = 'A→Z';
+  document.getElementById('sort-label').textContent = 'Sort A–Z';
+
+  if (profitSort === 'default' || profitSort === 'low') {
+    profitSort = 'high';
+    icon.textContent  = '£↓';
+    label.textContent = 'Most profit';
+    btn.classList.add('active');
+  } else {
+    profitSort = 'low';
+    icon.textContent  = '£↑';
+    label.textContent = 'Least profit';
+    btn.classList.add('active');
+  }
+  renderTable();
+}
+
+function toggleSort() {
+  const btn   = document.getElementById('sort-btn');
+  const icon  = document.getElementById('sort-icon');
+  const label = document.getElementById('sort-label');
+  // Reset profit sort
+  profitSort = 'default';
+  document.getElementById('profit-sort-btn').classList.remove('active');
+  document.getElementById('profit-sort-icon').textContent  = '£↕';
+  document.getElementById('profit-sort-label').textContent = 'Sort by profit';
+
+  if (sortOrder === 'default') {
+    sortOrder = 'asc';
+    icon.textContent  = 'A→Z';
+    label.textContent = 'A–Z';
+    btn.classList.add('active');
+  } else if (sortOrder === 'asc') {
+    sortOrder = 'desc';
+    icon.textContent  = 'Z→A';
+    label.textContent = 'Z–A';
+    btn.classList.add('active');
+  } else {
+    sortOrder = 'default';
+    icon.textContent  = 'A→Z';
+    label.textContent = 'Default';
+    btn.classList.remove('active');
+  }
+  renderTable();
+}
+
+
+function formatSelect(i, fmt) {
+  const opts = ['35mm','120','instax','polaroid','camera'];
+  const styles = {
+    '35mm':     'background:var(--blue-bg);color:var(--blue);',
+    '120':      'background:var(--green-bg);color:var(--green);',
+    'instax':   'background:var(--amber-bg);color:var(--amber);',
+    'polaroid': 'background:var(--red-bg);color:var(--red);',
+    'camera':   'background:var(--blue-bg);color:var(--blue);',
+  };
+  const s = styles[fmt] || styles['35mm'];
+  return `<select onchange="updateFormat(${i},this.value)" title="Click to edit category"
+    style="font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 6px;border-radius:4px;border:1px solid rgba(0,0,0,0.08);cursor:pointer;${s}appearance:none;-webkit-appearance:none;-moz-appearance:none;">
+    ${opts.map(o => `<option value="${o}" ${o===fmt?'selected':''}>${o}</option>`).join('')}
+  </select>`;
+}
+
+// ── TABLE ──
+function renderTable() {
+  const data = getSortedData();
+  const head = document.getElementById('table-head');
+  const body = document.getElementById('table-body');
+
+  if (currentView === 'compare') {
+    renderCompare(data, head, body);
+    return;
+  }
+
+  const isKey = currentView === 'key';
+
+  // Build headers
+  let ths = isKey
+    ? `<th></th><th>Fmt</th><th>Product</th>
+       <th style="text-align:right">NAS A</th>
+       <th style="text-align:right">NAS B</th>
+       <th style="text-align:center">Supplier</th>
+       <th style="text-align:right">Sell</th>
+       <th style="text-align:right">Comp</th>
+       <th style="text-align:right">Std profit</th>
+       <th style="text-align:right">Cash −10%</th>
+       <th style="text-align:right">Online −10%</th>
+       <th></th>`
+    : `<th></th><th>Format</th><th>Product</th>
+       <th>NAS — Supplier A</th><th>NAS — Supplier B</th>
+       <th style="text-align:center">Supplier</th>
+       <th>Sell price</th><th>Cost inc. VAT</th>
+       <th style="text-align:right">Net P&amp;L</th>`;
+
+  if (!isKey) {
+    if (currentView === 'all' || currentView === 'standard') {
+      ths += `<th style="text-align:right">Standard profit</th>`;
+    }
+    if (currentView === 'all' || currentView === 'cash') {
+      ths += `<th style="text-align:right">Cash (−10%)</th>`;
+    }
+    if (currentView === 'all' || currentView === 'online') {
+      ths += `<th style="text-align:right">Online (−10%+VAT)</th>`;
+    }
+    ths += `<th style="text-align:center">Stock</th>`;
+    ths += `<th>Competitor price</th>`;
+    ths += `<th></th>`;
+  }
+
+  head.innerHTML = `<tr>${ths}</tr>`;
+
+  // Build rows
+  let rows = '';
+  data.forEach((p) => {
+    const i = p._origIndex;
+    const dotC = dotClass(p.nasA, p.nasB, p.sell);
+
+    const nas  = activeNas(p);
+    const sa   = calcStandard(nas, p.sell);
+    const ca   = calcCash(nas, p.sell);
+    const oa   = calcOnline(nas, p.sell);
+    const net  = (p.sell / 1.20) - (nas * 1.20);
+    const netM = (net / (p.sell / 1.20)) * 100;
+
+    const costInc = (nas * 1.20).toFixed(2);
+
+    const stockOK = (p.stock || 0) >= 3;
+    const stockBadge = `<span class="stock-status ${stockOK ? 'stock-ok' : 'stock-low'}">${stockOK ? 'OK' : 'LOW'}</span>`;
+
+    // Determine active/auto supplier
+    const autoSup   = (p.hasSupA !== false && p.hasSupB !== false)
+                        ? (p.nasA < p.nasB ? 'A' : 'B')
+                        : (p.hasSupA !== false ? 'A' : 'B');
+    const activeSup = p.supplierChoice || autoSup;
+    const isManual  = !!p.supplierChoice;
+
+    const nameA = p.supNameA || supAName();
+    const nameB = p.supNameB || supBName();
+    const shortA = nameA.length > 8 ? nameA.slice(0,8) : nameA;
+    const shortB = nameB.length > 8 ? nameB.slice(0,8) : nameB;
+
+    const supToggle = `
+      <div style="text-align:center">
+        <div class="sup-toggle">
+          ${p.hasSupA !== false ? `<button onclick="updateSupplier(${i},'A')" class="${activeSup==='A' ? supColourClass(nameA) : ''}" title="${nameA}">${shortA}</button>` : ''}
+          ${p.hasSupA !== false && p.hasSupB !== false ? `<div class="sup-divider"></div>` : ''}
+          ${p.hasSupB !== false ? `<button onclick="updateSupplier(${i},'B')" class="${activeSup==='B' ? supColourClass(nameB) : ''}" title="${nameB}">${shortB}</button>` : ''}
+          ${isManual ? `<div class="sup-divider"></div><button onclick="updateSupplier(${i},null)" title="Reset to auto">↺</button>` : ''}
+        </div>
+        <span class="auto-tag" style="color:var(--${activeSup==='A' ? 'sup-swains' : 'sup-dupli'})">${(p.hasSupA === false || p.hasSupB === false) ? 'only supplier' : isManual ? 'manual' : 'auto (cheapest)'}</span>
+      </div>`;
+
+    if (isKey) {
+      // ── KEY INFO ROW (compact) ──
+      rows += `<tr style="font-size:13px;">
+        <td style="padding:8px 10px;"><span class="dot dot-${dotC}"></span></td>
+        <td data-label="Format" style="padding:8px 4px;">${formatSelect(i, p.format)}</td>
+        <td data-label="Product" class="td-name" style="padding:8px 10px;font-size:13px;"><input class="inline-input" value="${p.name}" onchange="updateName(${i},this.value)" style="width:160px;font-size:13px;font-weight:500;" /></td>
+        <td data-label="NAS A" class="td-mono ${p.hasSupA===false ? 'nas-disabled' : p.nasA < p.nasB ? 'nas-best-a' : ''}" style="padding:8px 8px;font-size:12px;text-align:right;">
+          <input class="inline-input" value="${p.nasA.toFixed(3)}" onchange="updateNasA(${i},this.value)" style="width:68px;font-size:12px;" />
+          ${p.remarkA ? `<span title="${p.remarkA}" style="color:var(--amber);cursor:help;font-size:11px;"> ⚑</span>` : ''}
+          <label class="sup-on-off"><input type="checkbox" ${p.hasSupA!==false?'checked':''} onchange="toggleSupplierEnabled(${i},'A')" /></label>
+        </td>
+        <td data-label="NAS B" class="td-mono ${p.hasSupB===false ? 'nas-disabled' : p.nasB < p.nasA ? 'nas-best-b' : ''}" style="padding:8px 8px;font-size:12px;text-align:right;">
+          <input class="inline-input" value="${p.nasB.toFixed(3)}" onchange="updateNasB(${i},this.value)" style="width:68px;font-size:12px;" />
+          ${p.remarkB ? `<span title="${p.remarkB}" style="color:var(--amber);cursor:help;font-size:11px;"> ⚑</span>` : ''}
+          <label class="sup-on-off"><input type="checkbox" ${p.hasSupB!==false?'checked':''} onchange="toggleSupplierEnabled(${i},'B')" /></label>
+        </td>
+        <td data-label="Supplier" style="padding:8px 8px;">${supToggle}</td>
+        <td data-label="Sell" class="td-mono" style="padding:8px 8px;font-size:12px;text-align:right;">
+          <input class="inline-input" value="${p.sell.toFixed(2)}" onchange="updateSell(${i},this.value)" style="width:60px;font-size:12px;" />
+        </td>
+        <td data-label="Comp" style="padding:8px 8px;font-size:12px;text-align:right;">
+          ${p.compPrice ? `<span style="font-family:var(--mono);font-size:12px;color:var(--text2);">£${parseFloat(p.compPrice).toFixed(2)}</span>${p.compShop ? `<br><span style="font-size:10px;color:var(--text3);">${p.compShop}</span>` : ''}` : '<span style="color:var(--text3);font-size:11px;">—</span>'}
+        </td>
+        <td data-label="Std profit" style="text-align:right;padding:8px 8px;">${profitBadge(sa.profit, sa.margin)}</td>
+        <td data-label="Cash" style="text-align:right;padding:8px 8px;">${profitBadge(ca.profit, ca.margin)}</td>
+        <td data-label="Online" style="text-align:right;padding:8px 8px;">${profitBadge(oa.profit, oa.margin)}</td>
+        <td class="mobile-show" style="text-align:center;padding:8px 8px;">
+          <button class="delete-btn" data-delete-idx="${i}" onclick="deleteProduct(${i})" title="Delete product">&#x2715;</button>
+        </td>
+      </tr>`;
+    } else {
+      // ── FULL VIEW ROW ──
+      let stdCells = '', cashCells = '', onlineCells = '';
+      if (currentView === 'all' || currentView === 'standard') {
+        stdCells = `<td style="text-align:right">${profitBadge(sa.profit, sa.margin)}</td>`;
+      }
+      if (currentView === 'all' || currentView === 'cash') {
+        cashCells = `<td style="text-align:right">${profitBadge(ca.profit, ca.margin)}</td>`;
+      }
+      if (currentView === 'all' || currentView === 'online') {
+        onlineCells = `<td style="text-align:right">${profitBadge(oa.profit, oa.margin)}</td>`;
+      }
+      rows += `<tr>
+        <td><span class="dot dot-${dotC}"></span></td>
+        <td>${formatSelect(i, p.format)}</td>
+        <td class="td-name"><input class="inline-input" value="${p.name}" onchange="updateName(${i},this.value)" style="width:180px;font-size:13px;font-weight:500;" /></td>
+        <td class="td-mono ${p.hasSupA===false ? 'nas-disabled' : p.nasA < p.nasB ? 'nas-best-a' : ''}">
+          <input class="inline-input" style="width:80px;margin-bottom:3px;font-size:11px;color:var(--text3)" value="${nameA}" onchange="updateSupName(${i},'A',this.value)" placeholder="${supAName()}" />
+          <br>
+          <input class="inline-input" value="${p.nasA.toFixed(3)}" onchange="updateNasA(${i},this.value)" />
+          <textarea class="remark-input" rows="1" placeholder="Min. order / notes…" onchange="updateRemark(${i},'A',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${p.remarkA || ''}</textarea>
+          <label class="sup-on-off"><input type="checkbox" ${p.hasSupA!==false?'checked':''} onchange="toggleSupplierEnabled(${i},'A')" /></label>
+        </td>
+        <td class="td-mono ${p.hasSupB===false ? 'nas-disabled' : p.nasB < p.nasA ? 'nas-best-b' : ''}">
+          <input class="inline-input" style="width:80px;margin-bottom:3px;font-size:11px;color:var(--text3)" value="${nameB}" onchange="updateSupName(${i},'B',this.value)" placeholder="${supBName()}" />
+          <br>
+          <input class="inline-input" value="${p.nasB.toFixed(3)}" onchange="updateNasB(${i},this.value)" />
+          <textarea class="remark-input" rows="1" placeholder="Min. order / notes…" onchange="updateRemark(${i},'B',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${p.remarkB || ''}</textarea>
+          <label class="sup-on-off"><input type="checkbox" ${p.hasSupB!==false?'checked':''} onchange="toggleSupplierEnabled(${i},'B')" /></label>
+        </td>
+        <td>${supToggle}</td>
+        <td class="td-mono">
+          <input class="inline-input" value="${p.sell.toFixed(2)}" onchange="updateSell(${i},this.value)" style="width:60px" />
+        </td>
+        <td class="td-muted">£${costInc}</td>
+        <td style="text-align:right">${profitBadge(net, netM)}</td>
+        ${stdCells}${cashCells}${onlineCells}
+        <td style="text-align:center">
+          <div class="stock-ctrl">
+            <button class="stock-btn" onclick="updateStock(${i},-1)">−</button>
+            <span class="stock-val">${p.stock || 0}</span>
+            <button class="stock-btn" onclick="updateStock(${i},+1)">+</button>
+          </div>
+          <div style="margin-top:3px">${stockBadge}</div>
+        </td>
+        <td>
+          <div class="comp-cell">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text3);">£</span>
+              <input type="number" class="comp-input-price" value="${p.compPrice || ''}" placeholder="0.00" step="0.01" min="0"
+                onchange="updateComp(${i},'compPrice',this.value)" />
+              ${p.compPrice && p.sell ? (() => {
+                const diff = parseFloat(p.sell) - parseFloat(p.compPrice);
+                if (Math.abs(diff) < 0.01) return '<span class="comp-diff-same">same price</span>';
+                if (diff < 0) return '<span class="comp-diff-higher">£' + Math.abs(diff).toFixed(2) + ' cheaper</span>';
+                return '<span class="comp-diff-lower">£' + Math.abs(diff).toFixed(2) + ' more expensive</span>';
+              })() : ''}
+            </div>
+            <input type="text" class="comp-input-shop" value="${p.compShop || ''}" placeholder="Shop name…"
+              onchange="updateComp(${i},'compShop',this.value)" />
+          </div>
+        </td>
+        <td style="text-align:center">
+          <button class="delete-btn" data-delete-idx="${i}" onclick="deleteProduct(${i})" title="Delete product">&#x2715;</button>
+        </td>
+      </tr>`;
+    }
+  });
+
+  body.innerHTML = rows;
+}
+
+function renderCompare(data, head, body) {
+  head.innerHTML = `<tr>
+    <th></th>
+    <th>Format</th>
+    <th>Product</th>
+    <th style="text-align:right">NAS — ${supAName()}</th>
+    <th style="text-align:right">NAS — ${supBName()}</th>
+    <th style="text-align:right">Cheaper</th>
+    <th style="text-align:right">Saving / unit</th>
+    <th style="text-align:right">Cost inc. VAT A</th>
+    <th style="text-align:right">Cost inc. VAT B</th>
+    <th></th>
+  </tr>`;
+
+  let rows = '';
+  data.forEach((p) => {
+    const i = p._origIndex;
+    const cheaper = p.nasA < p.nasB ? supAName() : p.nasB <= p.nasA ? supBName() : supBName();
+    const saving  = Math.abs(p.nasA - p.nasB);
+    const dotC = dotClass(p.nasA, p.nasB, p.sell);
+
+    rows += `<tr>
+      <td><span class="dot dot-${dotC}"></span></td>
+      <td data-label="Format">${formatSelect(i, p.format)}</td>
+      <td data-label="Product" class="td-name">${p.name}</td>
+      <td data-label="NAS A" class="td-mono">
+        <input class="inline-input" value="${p.nasA.toFixed(3)}" onchange="updateNasA(${i},this.value)" />
+
+      </td>
+      <td data-label="NAS B" class="td-mono">
+        <input class="inline-input" value="${p.nasB.toFixed(3)}" onchange="updateNasB(${i},this.value)" />
+
+      </td>
+      <td data-label="Cheaper" style="text-align:right">
+        ${cheaper === '—' ? `<span class="td-muted">—</span>` : `<span class="badge badge-blue">${cheaper}</span>`}
+      </td>
+      <td data-label="Saving" class="saving-cell" style="text-align:right">${saving > 0 ? fmt(saving) : '—'}</td>
+      <td data-label="Cost A" class="td-muted">£${(p.nasA * 1.20).toFixed(2)}</td>
+      <td data-label="Cost B" class="td-muted">£${(p.nasB * 1.20).toFixed(2)}</td>
+      <td class="mobile-show" style="text-align:center">
+        <button class="delete-btn" data-delete-idx="${i}" onclick="deleteProduct(${i})" title="Delete product">&#x2715;</button>
+      </td>
+    </tr>`;
+  });
+
+  body.innerHTML = rows;
+}
+
+// ── CONTROLS ──
+function setView(v, btn) {
+  currentView = v;
+  document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// Supplier name change re-renders
+// ── PERSISTENCE ──
+const STORAGE_KEY  = 'filmTrackerProducts_v4';
+const SUP_KEY      = 'filmTrackerSuppliers_v1';
+const EDIT_KEY     = 'filmTrackerLastEdit';
+const SYNC_KEY     = 'filmTrackerLastSync';
+
+function fmtTime(iso) {
+  if (!iso) return 'never';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+         d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+function updateTimestampBar() {
+  const el = document.getElementById('ts-bar');
+  if (!el) return;
+  const edit = localStorage.getItem(EDIT_KEY);
+  const sync = localStorage.getItem(SYNC_KEY);
+  el.innerHTML = `<span>✏️ Last edited: <strong>${fmtTime(edit)}</strong></span><span style="margin-left:20px;">🔄 Last synced: <strong>${fmtTime(sync)}</strong></span>`;
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+
+    localStorage.setItem(EDIT_KEY, new Date().toISOString());
+    updateTimestampBar();
+  } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge by index: saved data takes priority for user-editable fields,
+      // but new defaults fill in any fields missing from old saves
+      const merged = [];
+      const maxLen = Math.max(products.length, parsed.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < parsed.length && i < products.length) {
+          // Existing slot: user data wins for editable fields, defaults fill new fields
+          merged.push(Object.assign({}, products[i], parsed[i]));
+        } else if (i < parsed.length) {
+          // User-added product beyond the default list
+          merged.push(parsed[i]);
+        }
+        // If i >= parsed.length, new default products added in code — skip (don't restore deleted ones)
+      }
+      products.length = 0;
+      merged.forEach(p => products.push(p));
+    }
+
+  } catch(e) {}
+}
+
+
+
+// ── ADD PRODUCT PANEL ──
+function toggleAddPanel() {
+  const body    = document.getElementById('add-panel-body');
+  const header  = document.getElementById('add-toggle');
+  const chevron = document.getElementById('add-chevron');
+  const open = body.classList.toggle('open');
+  header.classList.toggle('open', open);
+  chevron.classList.toggle('open', open);
+}
+
+function addProduct() {
+  const name  = document.getElementById('new-name').value.trim();
+  const fmt   = document.getElementById('new-format').value;
+  const nasA  = parseFloat(document.getElementById('new-nasA').value);
+  const nasB  = parseFloat(document.getElementById('new-nasB').value);
+  const sell  = parseFloat(document.getElementById('new-sell').value);
+  const msg   = document.getElementById('add-msg');
+
+  msg.className = 'add-msg';
+  msg.textContent = '';
+
+  if (!name) {
+    msg.textContent = 'Please enter a product name.';
+    msg.className = 'add-msg error';
+    return;
+  }
+  if (isNaN(nasA) || nasA <= 0 || isNaN(nasB) || nasB <= 0) {
+    msg.textContent = 'Please enter valid NAS prices for both suppliers.';
+    msg.className = 'add-msg error';
+    return;
+  }
+  if (isNaN(sell) || sell <= 0) {
+    msg.textContent = 'Please enter a valid sell price.';
+    msg.className = 'add-msg error';
+    return;
+  }
+
+  products.push({ format: fmt, name, nasA, nasB, sell, stock: 0, supplierChoice: null, supNameA: null, supNameB: null, remarkA: '', remarkB: '', compPrice: '', compShop: '', hasSupA: true, hasSupB: true });
+  saveData();
+
+  renderStats();
+  renderTable();
+
+  // Clear fields
+  document.getElementById('new-name').value  = '';
+  document.getElementById('new-nasA').value  = '';
+  document.getElementById('new-nasB').value  = '';
+  document.getElementById('new-sell').value  = '';
+
+  msg.textContent = `"${name}" added to ${fmt}.`;
+  msg.className = 'add-msg success';
+  setTimeout(() => { msg.className = 'add-msg'; msg.textContent = ''; }, 3000);
+}
+
+// Allow Enter key to submit the form
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('add-panel-body').classList.contains('open')) {
+    const active = document.activeElement;
+    if (active && active.closest('#add-panel-body')) addProduct();
+  }
+});
+
+// ── INIT ──
+loadData();
+updateTimestampBar();
+renderStats();
+renderTable();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+function exportExcel() {
+  const supA = document.getElementById('supA-name').value || 'Supplier A';
+  const supB = document.getElementById('supB-name').value || 'Supplier B';
+
+  const headers = [
+    'Format', 'Product', 'NAS ' + supA, 'NAS ' + supB,
+    'Sell Price (£)', 'Cost inc VAT (£)',
+    'Std Profit (£)', 'Std Margin %',
+    'Cash -10% Profit (£)', 'Cash Margin %',
+    'Online -10% Profit (£)', 'Online Margin %',
+    'Net P&L (£)',
+    'Competitor Price (£)', 'Competitor Shop',
+    'Stock', 'Remarks A', 'Remarks B'
+  ];
+
+  const rows = products.map(p => {
+    const nas = activeNas(p);
+    const sa  = calcStandard(nas, p.sell);
+    const ca  = calcCash(nas, p.sell);
+    const oa  = calcOnline(nas, p.sell);
+    const net = (p.sell / 1.20) - (nas * 1.20);
+    return [
+      p.format,
+      p.name,
+      p.hasSupA !== false ? p.nasA : '',
+      p.hasSupB !== false ? p.nasB : '',
+      p.sell,
+      parseFloat((nas * 1.20).toFixed(2)),
+      parseFloat(sa.profit.toFixed(2)),
+      parseFloat(sa.margin.toFixed(1)),
+      parseFloat(ca.profit.toFixed(2)),
+      parseFloat(ca.margin.toFixed(1)),
+      parseFloat(oa.profit.toFixed(2)),
+      parseFloat(oa.margin.toFixed(1)),
+      parseFloat(net.toFixed(2)),
+      p.compPrice ? parseFloat(p.compPrice) : '',
+      p.compShop || '',
+      p.stock || 0,
+      p.remarkA || '',
+      p.remarkB || '',
+    ];
+  });
+
+  const wsData = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:10},{wch:26},{wch:12},{wch:12},{wch:14},{wch:16},
+    {wch:16},{wch:12},{wch:18},{wch:12},{wch:20},{wch:12},
+    {wch:12},{wch:18},{wch:18},{wch:8},{wch:24},{wch:24}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Film Price Tracker');
+  XLSX.writeFile(wb, 'film_price_tracker.xlsx');
+}
+
+function exportData() {
+  const supAVal = document.getElementById('supA-name') ? document.getElementById('supA-name').value : document.getElementById('supA').value;
+  const supBVal = document.getElementById('supB-name') ? document.getElementById('supB-name').value : document.getElementById('supB').value;
+  const payload = {
+    version: 1,
+    exported: new Date().toISOString(),
+    supA: supAVal,
+    supB: supBVal,
+    products: products
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+  const a = document.createElement('a');
+  a.href = uri;
+  a.download = 'film_tracker_data.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  localStorage.setItem(SYNC_KEY, new Date().toISOString());
+  updateTimestampBar();
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.products || !Array.isArray(payload.products)) {
+        alert('Invalid file — no products found.');
+        return;
+      }
+      products.length = 0;
+      payload.products.forEach(p => products.push(p));
+      if (payload.supA) document.getElementById('supA-name').value = payload.supA;
+      if (payload.supB) document.getElementById('supB-name').value = payload.supB;
+      saveData();
+      localStorage.setItem(SYNC_KEY, new Date().toISOString());
+      updateTimestampBar();
+      renderStats();
+      renderTable();
+      alert(`✓ Imported ${payload.products.length} products successfully.`);
+    } catch(err) {
+      alert('Could not read file. Make sure it\'s a valid Film Tracker export.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
