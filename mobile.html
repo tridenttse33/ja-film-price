@@ -114,8 +114,12 @@
 
   /* COMPACT CARD LAYOUT */
   .card-body { padding: 8px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
-  .price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .price-group { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .price-row { display: flex; align-items: flex-start; gap: 10px; }
+  .price-col { display: flex; flex-direction: column; gap: 6px; }
+  .price-group { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .profit-2x2 { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+  .profit-2x2-left { display: grid; grid-template-columns: auto auto; gap: 4px 8px; }
+  .notes-input { font-family: var(--sans) !important; font-size: 11px; color: var(--text2); flex: 1; margin-left: auto; min-width: 60px; max-width: 120px; resize: none; overflow: hidden; line-height: 1.4; padding: 4px 6px !important; }
   .price-tag { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   .price-input-mini {
     background: var(--bg3); border: 1.5px solid var(--border); color: var(--text);
@@ -445,36 +449,39 @@ function renderKey() {
       </div>
       <div class="card-body">
         <div class="price-row">
-          <div class="price-group">
-            <span class="price-tag">${labelA}</span>${nasAInput}
+          <div class="price-col">
+            <div class="price-group">
+              <span class="price-tag">${labelA}</span>${nasAInput}
+            </div>
+            <div class="price-group">
+              <span class="price-tag">${labelB}</span>${nasBInput}
+            </div>
           </div>
-          <div class="price-group">
-            <span class="price-tag">${labelB}</span>${nasBInput}
-          </div>
-          <div class="price-group" style="margin-left:10px;border-left:2px solid var(--border);padding-left:10px;">
-            <span class="price-tag" style="color:var(--accent);">Sell</span>
-            <input type="number" class="price-input-mini price-sell-mini" value="${p.sell.toFixed(2)}" step="0.01" min="0" onchange="mUpdateSell(${i},this.value)" />
-          </div>
-          <div class="price-group" style="margin-left:auto;">
-            <span class="price-tag">Comp</span>
-            <input type="number" class="price-input-mini" value="${p.compPrice || ''}" step="0.01" min="0" placeholder="—" onchange="mUpdateComp(${i},'compPrice',this.value)" style="width:70px;" />
-          </div>
-          <div class="price-group">
-            <span class="price-tag">Shop</span>
-            <input type="text" class="price-input-mini" value="${p.compShop || ''}" placeholder="—" onchange="mUpdateComp(${i},'compShop',this.value)" style="width:65px;font-family:var(--sans);" />
+          <div class="price-col" style="margin-left:auto;border-left:2px solid var(--border);padding-left:16px;">
+            <div class="price-group">
+              <span class="price-tag" style="color:var(--accent);">Sell</span>
+              <input type="number" class="price-input-mini price-sell-mini" value="${p.sell.toFixed(2)}" step="0.01" min="0" onchange="mUpdateSell(${i},this.value)" />
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:6px;">
+              <div class="price-group">
+                <span class="price-tag">Comp</span>
+                <input type="number" class="price-input-mini" value="${p.compPrice || ''}" step="0.01" min="0" placeholder="—" onchange="mUpdateComp(${i},'compPrice',this.value)" style="width:75px;" />
+              </div>
+              <div class="price-group">
+                <span class="price-tag">Shop</span>
+                <input type="text" class="price-input-mini" value="${p.compShop || ''}" placeholder="—" onchange="mUpdateComp(${i},'compShop',this.value)" style="width:75px;font-family:var(--sans);" />
+              </div>
+            </div>
           </div>
         </div>
-        <div class="profit-row">
-          <div class="profit-item"><span class="pb-label">Std</span>${pBadge(stdP, stdM)}</div>
-          <span class="pb-dot">·</span>
-          <div class="profit-item"><span class="pb-label">Cash</span>${pBadge(cashP, cashM)}</div>
-          <span class="pb-dot">·</span>
-          <div class="profit-item"><span class="pb-label">Online</span>${pBadge(onlineP, onlineM)}</div>
-          <span class="pb-dot">·</span>
-          <div class="profit-item"><span class="pb-label">Net P&L</span>${pBadge(netPL, (netPL / (p.sell / 1.20)) * 100)}</div>
-          <input type="text" class="price-input-mini" value="${p.notes || ''}" placeholder="notes…"
-            onchange="mUpdateNote(${i},this.value)"
-            style="margin-left:auto;width:100px;font-family:var(--sans);font-size:11px;color:var(--text2);" />
+        <div class="profit-2x2">
+          <div class="profit-2x2-left">
+            <div class="profit-item"><span class="pb-label">Std</span>${pBadge(stdP, stdM)}</div>
+            <div class="profit-item"><span class="pb-label">Cash</span>${pBadge(cashP, cashM)}</div>
+            <div class="profit-item"><span class="pb-label">Online</span>${pBadge(onlineP, onlineM)}</div>
+            <div class="profit-item"><span class="pb-label">Net P&L</span>${pBadge(netPL, (netPL / (p.sell / 1.20)) * 100)}</div>
+          </div>
+          <textarea class="price-input-mini notes-input" placeholder="notes…" onchange="mUpdateNote(${i},this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" rows="1">${p.notes || ''}</textarea>
         </div>
       </div>
     </div>`;
