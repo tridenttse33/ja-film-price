@@ -556,13 +556,24 @@ function exportData() {
     products: products
   };
   const json = JSON.stringify(payload, null, 2);
-  const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-  const a = document.createElement('a');
-  a.href = uri;
-  a.download = 'film_tracker_data.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+
+  // Try Blob URL first (works on most browsers)
+  try {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'film_tracker_data.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+  } catch(e) {
+    // Fallback: open JSON in new tab so user can save manually
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="word-wrap:break-word;white-space:pre-wrap;">' + json + '</pre>');
+    w.document.title = 'film_tracker_data.json';
+    alert('Your data is shown in the new tab. Press and hold the text → Select All → Copy, then paste into a .json file.');
+  }
   localStorage.setItem(SYNC_KEY, new Date().toISOString());
   updateTimestampBar();
 }
