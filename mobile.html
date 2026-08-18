@@ -63,6 +63,19 @@
 
   /* SORT */
   .sort-bar { display: flex; gap: 8px; padding: 8px 16px 0; }
+  .filter-chips { display: flex; gap: 6px; padding: 10px 16px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    background: var(--bg2); color: var(--text3); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 5px 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  @keyframes editFlash {
+    0% { box-shadow: inset 0 0 0 2px var(--accent); }
+    100% { box-shadow: inset 0 0 0 2px transparent; }
+  }
+  .card.just-edited { animation: editFlash 0.9s ease-out; }
   .sort-btn {
     background: var(--bg2); border: 1.5px solid var(--border); color: var(--text2);
     font-family: var(--mono); font-size: 12px; font-weight: 500;
@@ -126,7 +139,25 @@
   .price-group { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
   .profit-2x2 { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
   .profit-2x2-left { display: grid; grid-template-columns: auto auto; gap: 4px 8px; }
-  .notes-input { font-family: var(--sans) !important; font-size: 11px; color: var(--text2); flex: 1; margin-left: auto; min-width: 60px; max-width: 120px; resize: none; overflow: hidden; line-height: 1.4; padding: 4px 6px !important; }
+  .notes-input { font-family: var(--sans) !important; font-size: 11px; color: var(--text2); flex: 1; margin-left: auto; min-width: 60px; max-width: 120px; resize: none; overflow: hidden; line-height: 1.4; padding: 4px 6px !important; white-space: nowrap; text-overflow: ellipsis; transition: max-width 0.18s ease; }
+  /* Tapping a note expands it in place to full width + full height, then
+     collapses back on blur — so the card keeps its normal size when idle. */
+  .notes-input:focus {
+    max-width: 100%; white-space: pre-wrap; overflow: visible;
+    border-color: var(--accent); position: relative; z-index: 5;
+  }
+  .notes-row-full { flex-wrap: wrap; }
+  .note-modal-text {
+    width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
+    color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5;
+    padding: 10px; border-radius: 6px; resize: vertical; min-height: 120px;
+  }
+  .note-modal-text:focus { outline: none; border-color: var(--accent); }
+  .note-flag {
+    font-family: var(--mono); font-size: 9px; color: var(--accent);
+    background: var(--accent-bg, var(--bg3)); border-radius: 3px;
+    padding: 1px 4px; margin-left: 4px; cursor: pointer; flex-shrink: 0; align-self: center;
+  }
   .price-tag { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   .price-input-mini {
     background: var(--bg3); border: 1.5px solid var(--border); color: var(--text);
@@ -150,6 +181,12 @@
   .pb-red   { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--red);   background: var(--red-bg);   padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
   .pb-pct { font-size: 10px; opacity: 0.75; }
   .pb-dot { color: var(--border2); font-size: 12px; }
+  .pb-none { color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .version-badge {
+    font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text3);
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 5px; margin-left: auto; white-space: nowrap; align-self: flex-start;
+  }
 
   /* FAB */
   .fab {
@@ -216,6 +253,7 @@
   <div style="display:flex;align-items:center;gap:10px;">
     <img src="data:image/jpeg;base64,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" alt="J&A Film Lab" style="height:44px;width:44px;object-fit:contain;border-radius:6px;" />
     <span class="header-title">J&A FILM LAB</span>
+    <span class="version-badge" id="version-badge"></span>
   </div>
 
   <div style="display:flex;gap:6px;width:100%;">
@@ -234,6 +272,14 @@
   <input type="text" id="search" placeholder="Search products…" oninput="onSearch(this.value)">
   <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
 </div>
+<div class="filter-chips" id="filter-chips">
+  <button class="chip active" data-fmt="all" onclick="setFormatFilter('all',this)">All</button>
+  <button class="chip" data-fmt="35mm" onclick="setFormatFilter('35mm',this)">35mm</button>
+  <button class="chip" data-fmt="120" onclick="setFormatFilter('120',this)">120</button>
+  <button class="chip" data-fmt="instax" onclick="setFormatFilter('instax',this)">instax</button>
+  <button class="chip" data-fmt="polaroid" onclick="setFormatFilter('polaroid',this)">polaroid</button>
+  <button class="chip" data-fmt="camera" onclick="setFormatFilter('camera',this)">camera</button>
+</div>
 <div class="sort-bar">
   <button class="sort-btn" id="sort-alpha" onclick="cycleAlpha()">A→Z</button>
   <button class="sort-btn" id="sort-profit" onclick="cycleProfit()">£↕ Profit</button>
@@ -246,7 +292,7 @@
 <div class="modal-overlay" id="add-modal-overlay" style="display:none;">
   <div class="modal-sheet">
     <div class="modal-title-row">
-      <span class="modal-title">Add New Product</span>
+      <span class="modal-title" id="modal-title">Add New Product</span>
       <button class="modal-close" onclick="closeAddModal()">✕</button>
     </div>
     <div class="form-grid">
@@ -269,11 +315,11 @@
       <div class="form-row">
         <div class="form-field">
           <label id="np-supNameA-label">Supplier A price</label>
-          <input type="number" id="np-nasA" step="0.001" min="0" placeholder="0.000" />
+          <input type="number" inputmode="decimal" id="np-nasA" step="0.001" min="0" placeholder="0.000" />
         </div>
         <div class="form-field">
           <label id="np-supNameB-label">Supplier B price</label>
-          <input type="number" id="np-nasB" step="0.001" min="0" placeholder="0.000" />
+          <input type="number" inputmode="decimal" id="np-nasB" step="0.001" min="0" placeholder="0.000" />
         </div>
       </div>
       <div class="form-row">
@@ -298,12 +344,12 @@
       </div>
       <div class="form-field">
         <label>Sell price *</label>
-        <input type="number" id="np-sell" step="0.01" min="0" placeholder="0.00" />
+        <input type="number" inputmode="decimal" id="np-sell" step="0.01" min="0" placeholder="0.00" />
       </div>
       <div class="form-row">
         <div class="form-field">
           <label>Competitor price</label>
-          <input type="number" id="np-compPrice" step="0.01" min="0" placeholder="0.00" />
+          <input type="number" inputmode="decimal" id="np-compPrice" step="0.01" min="0" placeholder="0.00" />
         </div>
         <div class="form-field">
           <label>Competitor shop</label>
@@ -317,7 +363,7 @@
     </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-secondary" onclick="closeAddModal()">Cancel</button>
-      <button class="modal-btn modal-btn-primary" onclick="submitNewProduct()">Add Product</button>
+      <button class="modal-btn modal-btn-primary" id="modal-submit" onclick="submitNewProduct()">Add Product</button>
     </div>
   </div>
 </div>
@@ -396,7 +442,23 @@ const products = [
   { format:'camera', name:'Kodak Ultra F8', nasA:10, nasB:19.99, sell:33, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:false, hasSupB:true, notes:'' },
 ];
 
+// ── VERSION ──────────────────────────────────────────────
+// Bump APP_VERSION whenever you push a new build to GitHub.
+const APP_VERSION = 'v1.6.0';
+const APP_BUILD   = '2026-08-18';
+// Changelog:
+//   v1.6.0 — Long notes readable: tap-to-expand in place, ⋯ flag when clipped,
+//            full-screen note editor
+//   v1.5.0 — Edit product (✎ on each card): rename, change suppliers, enable a
+//            second supplier, fix format — all in one form
+//   v1.4.0 — Format filter chips, supplier-toggle hint, edit flash, decimal keyboards
+//   v1.3.0 — Add/delete products, manual supplier override, Δ price-diff box,
+//            name-based save merging, margin + escaping fixes
+//   v1.2.0 — Add-on/discount grouping, dynamic price preview
+// ─────────────────────────────────────────────────────────
+
 const STORAGE_KEY = 'filmTrackerProducts_v6';
+const DELETED_KEY = 'filmTrackerDeleted_v1';
 const SUP_KEY     = 'filmTrackerSuppliers_v1';
 const EDIT_KEY    = 'filmTrackerLastEdit';
 const SYNC_KEY    = 'filmTrackerLastSync';
@@ -416,6 +478,39 @@ function updateTimestampBar() {
 }
 let currentView = 'key';
 let searchQuery = '';
+let formatFilter = 'all';
+
+// Names of built-in products the user has deleted. Kept separately so a
+// deletion isn't undone the next time the app loads its default product list.
+function getDeletedNames() {
+  try {
+    const raw = localStorage.getItem(DELETED_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch(e) { return new Set(); }
+}
+function recordDeletedName(name) {
+  try {
+    const set = getDeletedNames();
+    set.add(name);
+    localStorage.setItem(DELETED_KEY, JSON.stringify([...set]));
+  } catch(e) {}
+}
+function unrecordDeletedName(name) {
+  try {
+    const set = getDeletedNames();
+    if (!set.delete(name)) return;
+    localStorage.setItem(DELETED_KEY, JSON.stringify([...set]));
+  } catch(e) {}
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function supColourClass(name) {
   const map = {
@@ -440,12 +535,28 @@ function loadData() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      const merged = [];
-      const maxLen = Math.max(products.length, parsed.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < parsed.length && i < products.length) merged.push(Object.assign({}, products[i], parsed[i]));
-        else if (i < parsed.length) merged.push(parsed[i]);
-      }
+      if (!Array.isArray(parsed)) return;
+
+      // Match saved products to built-in defaults BY NAME, not by array position.
+      // This keeps saved edits attached to the right product even after the
+      // built-in list is reordered, or after products are added/deleted in-app.
+      const baseByName = {};
+      products.forEach(p => { if (p && p.name) baseByName[p.name] = p; });
+
+      const merged = parsed.map(sp => {
+        if (!sp || !sp.name) return null;
+        const base = baseByName[sp.name];
+        return base ? Object.assign({}, base, sp) : sp;
+      }).filter(Boolean);
+
+      // Add built-in products the saved data has never seen (e.g. new products
+      // shipped in an app update), but NOT ones the user deliberately deleted.
+      const savedNames = new Set(merged.map(p => p.name));
+      const deleted = getDeletedNames();
+      products.forEach(p => {
+        if (p && p.name && !savedNames.has(p.name) && !deleted.has(p.name)) merged.push(p);
+      });
+
       products.length = 0;
       merged.forEach(p => products.push(p));
     }
@@ -505,6 +616,9 @@ function packOrder(name)   { return /5\s*pack/i.test(name) ? 1 : 0; }
 
 function getFiltered() {
   let data = products.map((p, i) => ({ ...p, _idx: i }));
+  if (formatFilter !== 'all') {
+    data = data.filter(p => p.format === formatFilter);
+  }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     data = data.filter(p => p.name.toLowerCase().includes(q) || p.format.toLowerCase().includes(q));
@@ -557,10 +671,72 @@ function updateSortBtns() {
   pb.classList.toggle('active', ['profit-high','profit-low','margin-high','margin-low'].includes(sortMode));
 }
 
-function mUpdateNasA(i, val) { products[i].nasA = parseFloat(val) || 0; saveData(); render(); }
-function mUpdateNasB(i, val) { products[i].nasB = parseFloat(val) || 0; saveData(); render(); }
-function mUpdateSell(i, val) { products[i].sell = parseFloat(val) || 0; saveData(); render(); }
+let lastEditedIdx = null;
+
+function flagEdited(i) {
+  lastEditedIdx = i;
+}
+
+function applyEditFlash() {
+  if (lastEditedIdx === null) return;
+  const btn = document.querySelector(`#cards .card [onclick*="deleteProduct(${lastEditedIdx})"]`);
+  const card = btn ? btn.closest('.card') : null;
+  if (card) {
+    card.classList.add('just-edited');
+    card.addEventListener('animationend', () => card.classList.remove('just-edited'), { once: true });
+  }
+  lastEditedIdx = null;
+}
+
+function mUpdateNasA(i, val) { products[i].nasA = parseFloat(val) || 0; flagEdited(i); saveData(); render(); }
+function mUpdateNasB(i, val) { products[i].nasB = parseFloat(val) || 0; flagEdited(i); saveData(); render(); }
+function mUpdateSell(i, val) { products[i].sell = parseFloat(val) || 0; flagEdited(i); saveData(); render(); }
 function mUpdateComp(i, field, val) { products[i][field] = val; saveData(); }
+// ── NOTES ────────────────────────────────────────────────
+// Collapsed, a note is a single clipped line so cards stay compact.
+// Focusing expands it in place; blurring collapses it again.
+function growNote(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function expandNote(el) {
+  el.classList.add('expanded');
+  const row = el.closest('.card-row');
+  if (row) row.classList.add('notes-row-full');
+  growNote(el);
+}
+function collapseNote(el) {
+  el.classList.remove('expanded');
+  const row = el.closest('.card-row');
+  if (row) row.classList.remove('notes-row-full');
+  el.style.height = '';
+  el.scrollTop = 0;
+  el.title = el.value;
+}
+function showFullNote(i) {
+  const p = products[i];
+  if (!p) return;
+  document.getElementById('note-modal-title').textContent = p.name;
+  const box = document.getElementById('note-modal-text');
+  box.value = p.notes || '';
+  box.dataset.idx = i;
+  document.getElementById('note-modal-overlay').style.display = 'flex';
+}
+function closeNoteModal() {
+  document.getElementById('note-modal-overlay').style.display = 'none';
+}
+function saveFullNote() {
+  const box = document.getElementById('note-modal-text');
+  const i = parseInt(box.dataset.idx, 10);
+  if (!isNaN(i) && products[i]) {
+    products[i].notes = box.value;
+    flagEdited(i);
+    saveData();
+    render();
+  }
+  closeNoteModal();
+}
+
 function mUpdateNote(i, val) { products[i].notes = val; saveData(); }
 
 function mCycleSupplierChoice(i) {
@@ -582,6 +758,7 @@ function deleteProduct(i) {
   const p = products[i];
   if (!p) return;
   if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+  recordDeletedName(p.name);
   products.splice(i, 1);
   saveData();
   render();
@@ -593,13 +770,15 @@ function renderKey() {
   return data.map(p => {
     const i = p._idx;
     const nas = activeNas(p);
+    const hasSell = p.sell > 0;
     const stdP = (p.sell / 1.20) - nas;
-    const stdM = (stdP / (p.sell / 1.20)) * 100;
+    const stdM = hasSell ? (stdP / (p.sell / 1.20)) * 100 : 0;
     const cashP = (p.sell * 0.9) - nas;
-    const cashM = (cashP / (p.sell * 0.9)) * 100;
+    const cashM = hasSell ? (cashP / (p.sell * 0.9)) * 100 : 0;
     const onlineP = (p.sell * 0.9 / 1.20) - nas;
-    const onlineM = (onlineP / (p.sell * 0.9 / 1.20)) * 100;
+    const onlineM = hasSell ? (onlineP / (p.sell * 0.9 / 1.20)) * 100 : 0;
     const netPL = (p.sell / 1.20) - (nas * 1.20);
+    const netPLm = hasSell ? (netPL / (p.sell / 1.20)) * 100 : 0;
 
     const autoSup = (p.hasSupA !== false && p.hasSupB !== false) ? (p.nasA < p.nasB ? 'A' : 'B') : (p.hasSupA !== false ? 'A' : 'B');
     const activeSup = p.supplierChoice || autoSup;
@@ -610,16 +789,25 @@ function renderKey() {
     const supBadgeTitle = isManual ? `Manually using ${supName} — tap to cycle` : `Auto-selected ${supName} (cheapest) — tap to override`;
 
     const nasAInput = p.hasSupA !== false
-      ? `<input type="number" class="price-input-mini ${p.nasA < p.nasB ? 'price-best-a' : ''}" value="${p.nasA.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasA(${i},this.value)" />`
+      ? `<input type="number" inputmode="decimal" class="price-input-mini ${p.nasA < p.nasB ? 'price-best-a' : ''}" value="${p.nasA.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasA(${i},this.value)" />`
       : '<span class="mono-muted">—</span>';
     const nasBInput = p.hasSupB !== false
-      ? `<input type="number" class="price-input-mini ${p.nasB < p.nasA ? 'price-best-b' : ''}" value="${p.nasB.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasB(${i},this.value)" />`
+      ? `<input type="number" inputmode="decimal" class="price-input-mini ${p.nasB < p.nasA ? 'price-best-b' : ''}" value="${p.nasB.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasB(${i},this.value)" />`
       : '<span class="mono-muted">—</span>';
     const diffBox = (p.hasSupA !== false && p.hasSupB !== false)
       ? `<span class="sup-diff-box">Δ £${Math.abs(p.nasA - p.nasB).toFixed(3)}</span>`
       : '';
+    // Long notes are clipped in the collapsed field, so flag that there's more
+    // to read rather than leaving it silently hidden.
+    const noteText = p.notes || '';
+    const noteFlag = noteText.length > 18
+      ? `<span class="note-flag" onclick="showFullNote(${i})" title="View full note">⋯ ${noteText.length}</span>`
+      : '';
 
     const pBadge = (profit, margin) => {
+      if (!hasSell || !isFinite(profit) || !isFinite(margin)) {
+        return `<span class="pb-none">—</span>`;
+      }
       const cls = profit >= 3 ? 'green' : profit >= 0.5 ? 'amber' : 'red';
       const sign = profit < 0 ? '-' : '';
       return `<span class="pb-${cls}">${sign}£${Math.abs(profit).toFixed(2)} <span class="pb-pct">${margin.toFixed(0)}%</span></span>`;
@@ -628,34 +816,35 @@ function renderKey() {
     return `<div class="card">
       <div class="card-header">
         <span class="fmt-badge ${fmtClass(p.format)}">${p.format}</span>
-        <span class="card-name">${p.name}</span>
-        <span class="${supColourClass(supName)} sup-toggle ${isManual ? 'sup-manual' : ''}" onclick="mCycleSupplierChoice(${i})" title="${supBadgeTitle}" style="font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap;cursor:pointer;">${supName}${isManual ? ' 📌' : ''}</span>
+        <span class="card-name">${escapeHtml(p.name)}</span>
+        <span class="${supColourClass(supName)} sup-toggle ${isManual ? 'sup-manual' : ''}" onclick="mCycleSupplierChoice(${i})" title="${escapeHtml(supBadgeTitle)}" style="font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap;cursor:pointer;">⇄ ${escapeHtml(supName)}${isManual ? ' 📌' : ''}</span>
+        <button class="card-delete" onclick="openEditModal(${i})" aria-label="Edit product">✎</button>
         <button class="card-delete" onclick="deleteProduct(${i})" aria-label="Delete product">🗑</button>
       </div>
       <div class="card-body">
         <div class="price-row">
           <div class="price-col">
             <div class="price-group">
-              <span class="price-tag">${labelA}</span>${nasAInput}
+              <span class="price-tag">${escapeHtml(labelA)}</span>${nasAInput}
             </div>
             <div class="price-group">
-              <span class="price-tag">${labelB}</span>${nasBInput}
+              <span class="price-tag">${escapeHtml(labelB)}</span>${nasBInput}
             </div>
           </div>
           ${diffBox}
           <div class="price-col" style="margin-left:auto;border-left:2px solid var(--border);padding-left:16px;">
             <div class="price-group">
               <span class="price-tag" style="color:var(--accent);">Sell</span>
-              <input type="number" class="price-input-mini price-sell-mini" value="${p.sell.toFixed(2)}" step="0.01" min="0" onchange="mUpdateSell(${i},this.value)" />
+              <input type="number" inputmode="decimal" class="price-input-mini price-sell-mini" value="${p.sell.toFixed(2)}" step="0.01" min="0" onchange="mUpdateSell(${i},this.value)" />
             </div>
             <div style="display:flex;align-items:flex-end;gap:6px;">
               <div class="price-group">
                 <span class="price-tag">Comp</span>
-                <input type="number" class="price-input-mini" value="${p.compPrice || ''}" step="0.01" min="0" placeholder="—" onchange="mUpdateComp(${i},'compPrice',this.value)" style="width:75px;" />
+                <input type="number" inputmode="decimal" class="price-input-mini" value="${escapeHtml(p.compPrice || '')}" step="0.01" min="0" placeholder="—" onchange="mUpdateComp(${i},'compPrice',this.value)" style="width:75px;" />
               </div>
               <div class="price-group">
                 <span class="price-tag">Shop</span>
-                <input type="text" class="price-input-mini" value="${p.compShop || ''}" placeholder="—" onchange="mUpdateComp(${i},'compShop',this.value)" style="width:75px;font-family:var(--sans);" />
+                <input type="text" class="price-input-mini" value="${escapeHtml(p.compShop || '')}" placeholder="—" onchange="mUpdateComp(${i},'compShop',this.value)" style="width:75px;font-family:var(--sans);" />
               </div>
             </div>
           </div>
@@ -665,9 +854,9 @@ function renderKey() {
             <div class="profit-item"><span class="pb-label">Std</span>${pBadge(stdP, stdM)}</div>
             <div class="profit-item"><span class="pb-label">Cash</span>${pBadge(cashP, cashM)}</div>
             <div class="profit-item"><span class="pb-label">Online</span>${pBadge(onlineP, onlineM)}</div>
-            <div class="profit-item"><span class="pb-label">Net P&L</span>${pBadge(netPL, (netPL / (p.sell / 1.20)) * 100)}</div>
+            <div class="profit-item"><span class="pb-label">Net P&L</span>${pBadge(netPL, netPLm)}</div>
           </div>
-          <textarea class="price-input-mini notes-input" placeholder="notes…" onchange="mUpdateNote(${i},this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" rows="1">${p.notes || ''}</textarea>
+          <textarea class="price-input-mini notes-input" placeholder="notes…" title="${escapeHtml(p.notes || '')}" onchange="mUpdateNote(${i},this.value)" onfocus="expandNote(this)" onblur="collapseNote(this)" oninput="growNote(this)" rows="1">${escapeHtml(p.notes || '')}</textarea>${noteFlag}
         </div>
       </div>
     </div>`;
@@ -693,17 +882,18 @@ function renderCompare() {
     return `<div class="card">
       <div class="card-header">
         <span class="fmt-badge ${fmtClass(p.format)}">${p.format}</span>
-        <span class="card-name">${p.name}</span>
+        <span class="card-name">${escapeHtml(p.name)}</span>
         ${saving > 0 ? `<span class="saving-val">save £${saving.toFixed(2)}</span>` : ''}
+        <button class="card-delete" onclick="openEditModal(${i})" aria-label="Edit product">✎</button>
         <button class="card-delete" onclick="deleteProduct(${i})" aria-label="Delete product">🗑</button>
       </div>
       <div class="card-body">
-        <div class="card-row"><span class="card-label">${labelA}</span><span class="card-val">${nasADisp}</span></div>
-        <div class="card-row"><span class="card-label">${labelB}</span><span class="card-val">${nasBDisp}</span></div>
-        <div class="card-row"><span class="card-label">Cheaper</span>${cheaper !== '—' ? `<span class="${supColourClass(cheaper)}">${cheaper}</span>` : '<span style="color:var(--text3)">—</span>'}</div>
+        <div class="card-row"><span class="card-label">${escapeHtml(labelA)}</span><span class="card-val">${nasADisp}</span></div>
+        <div class="card-row"><span class="card-label">${escapeHtml(labelB)}</span><span class="card-val">${nasBDisp}</span></div>
+        <div class="card-row"><span class="card-label">Cheaper</span>${cheaper !== '—' ? `<span class="${supColourClass(cheaper)}">${escapeHtml(cheaper)}</span>` : '<span style="color:var(--text3)">—</span>'}</div>
         <div class="card-divider"></div>
-        <div class="card-row"><span class="card-label">Cost ${labelA}</span><span class="card-val">${costA}</span></div>
-        <div class="card-row"><span class="card-label">Cost ${labelB}</span><span class="card-val">${costB}</span></div>
+        <div class="card-row"><span class="card-label">Cost ${escapeHtml(labelA)}</span><span class="card-val">${costA}</span></div>
+        <div class="card-row"><span class="card-label">Cost ${escapeHtml(labelB)}</span><span class="card-val">${costB}</span></div>
       </div>
     </div>`;
   }).join('');
@@ -711,11 +901,19 @@ function renderCompare() {
 
 function render() {
   document.getElementById('cards').innerHTML = currentView === 'key' ? renderKey() : renderCompare();
+  applyEditFlash();
 }
 
 function setView(v, btn) {
   currentView = v;
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function setFormatFilter(fmt, btn) {
+  formatFilter = fmt;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   render();
 }
@@ -821,7 +1019,12 @@ function importExcel(input) {
   reader.readAsArrayBuffer(file);
 }
 
+let editingIdx = null; // null = adding a new product, otherwise index being edited
+
 function openAddModal() {
+  editingIdx = null;
+  document.getElementById('modal-title').textContent = 'Add New Product';
+  document.getElementById('modal-submit').textContent = 'Add Product';
   document.getElementById('np-format').value = '35mm';
   document.getElementById('np-name').value = '';
   document.getElementById('np-nasA').value = '';
@@ -834,6 +1037,27 @@ function openAddModal() {
   document.getElementById('np-compPrice').value = '';
   document.getElementById('np-compShop').value = '';
   document.getElementById('np-notes').value = '';
+  document.getElementById('add-modal-overlay').style.display = 'flex';
+}
+
+function openEditModal(i) {
+  const p = products[i];
+  if (!p) return;
+  editingIdx = i;
+  document.getElementById('modal-title').textContent = 'Edit Product';
+  document.getElementById('modal-submit').textContent = 'Save Changes';
+  document.getElementById('np-format').value = p.format;
+  document.getElementById('np-name').value = p.name;
+  document.getElementById('np-nasA').value = p.nasA || '';
+  document.getElementById('np-nasB').value = p.nasB || '';
+  document.getElementById('np-supNameA').value = p.supNameA || '';
+  document.getElementById('np-supNameB').value = p.supNameB || '';
+  document.getElementById('np-hasSupA').checked = p.hasSupA !== false;
+  document.getElementById('np-hasSupB').checked = p.hasSupB !== false;
+  document.getElementById('np-sell').value = p.sell || '';
+  document.getElementById('np-compPrice').value = p.compPrice || '';
+  document.getElementById('np-compShop').value = p.compShop || '';
+  document.getElementById('np-notes').value = p.notes || '';
   document.getElementById('add-modal-overlay').style.display = 'flex';
 }
 
@@ -854,18 +1078,25 @@ function submitNewProduct() {
 
   if (!hasSupA && !hasSupB) { alert('At least one supplier must be available.'); return; }
 
-  const newProduct = {
+  const isEdit = editingIdx !== null;
+
+  // Names are the merge key for saved data — duplicates would collide on reload.
+  // When editing, the product's own current name is allowed.
+  const clash = products.some((p, idx) =>
+    p.name.toLowerCase() === name.toLowerCase() && (!isEdit || idx !== editingIdx));
+  if (clash) {
+    alert(`A product named "${name}" already exists. Please use a different name.`);
+    return;
+  }
+
+  const fields = {
     format: document.getElementById('np-format').value,
     name: name,
     nasA: nasA,
     nasB: nasB,
     sell: sell,
-    stock: 0,
-    supplierChoice: null,
     supNameA: document.getElementById('np-supNameA').value.trim() || null,
     supNameB: document.getElementById('np-supNameB').value.trim() || null,
-    remarkA: '',
-    remarkB: '',
     compPrice: document.getElementById('np-compPrice').value.trim(),
     compShop: document.getElementById('np-compShop').value.trim(),
     hasSupA: hasSupA,
@@ -873,13 +1104,42 @@ function submitNewProduct() {
     notes: document.getElementById('np-notes').value.trim()
   };
 
-  products.push(newProduct);
+  if (isEdit) {
+    const p = products[editingIdx];
+    const oldName = p.name;
+    // If a manually chosen supplier is now marked unavailable, revert to auto.
+    if (p.supplierChoice === 'A' && !hasSupA) p.supplierChoice = null;
+    if (p.supplierChoice === 'B' && !hasSupB) p.supplierChoice = null;
+    Object.assign(p, fields);
+    if (oldName !== name) {
+      // Renames: the old name must not resurrect from the built-in list,
+      // and the new name must not be blocked by an old deletion record.
+      recordDeletedName(oldName);
+      unrecordDeletedName(name);
+    }
+    flagEdited(editingIdx);
+  } else {
+    unrecordDeletedName(name);
+    products.push(Object.assign({
+      stock: 0, supplierChoice: null, remarkA: '', remarkB: ''
+    }, fields));
+  }
+
+  editingIdx = null;
   saveData();
   render();
   closeAddModal();
 }
 
+function renderVersionBadge() {
+  const el = document.getElementById('version-badge');
+  if (!el) return;
+  el.textContent = APP_VERSION;
+  el.title = `${APP_VERSION} — built ${APP_BUILD}`;
+}
+
 loadData();
+renderVersionBadge();
 updateTimestampBar();
 render();
 </script>
@@ -927,6 +1187,20 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+<div class="modal-overlay" id="note-modal-overlay" style="display:none;">
+  <div class="modal-sheet">
+    <div class="modal-title-row">
+      <span class="modal-title" id="note-modal-title">Note</span>
+      <button class="modal-close" onclick="closeNoteModal()">&#10005;</button>
+    </div>
+    <textarea id="note-modal-text" class="note-modal-text" rows="7" placeholder="Add a note&#8230;"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeNoteModal()">Cancel</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveFullNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
