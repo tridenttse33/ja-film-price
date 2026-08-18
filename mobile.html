@@ -203,6 +203,11 @@
   .sup-lomography { background: var(--sup-lomo-bg);   color: var(--sup-lomo);   font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
   .sup-toggle { user-select: none; }
   .sup-manual { box-shadow: inset 0 0 0 1.5px currentColor; }
+  .sup-diff-box {
+    font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--text3);
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 6px; align-self: center; white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -325,11 +330,11 @@ const products = [
   { format:'35mm', name:'Kentmere 100 (24)', nasA:3.282, nasB:4.221, sell:5.99, stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'MIN 10', remarkB:'', compPrice:'5.49', compShop:'AW', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Kentmere 400 (24)', nasA:3.282, nasB:4.221, sell:5.99, stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'MIN 10', remarkB:'', compPrice:'5.9', compShop:'AW', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Colorplus 200 (24)', nasA:5.47, nasB:5.445, sell:9.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'MIN 20', remarkB:'MIN 10', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
-  { format:'35mm', name:'Ilford HP5 (36)', nasA:6.313, nasB:8.109, sell:9.5, stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'MIN 10', remarkB:'MIN 10', compPrice:'9.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
+  { format:'35mm', name:'Ilford HP5 (36)', nasA:6.6378, nasB:8.109, sell:9.99, stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'MIN 10', remarkB:'MIN 10', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Gold 200 (36)', nasA:6.88, nasB:6.923, sell:12.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'MIN 10', remarkB:'MIN 10', compPrice:'11.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
-  { format:'35mm', name:'Gold 200 (36) 3-pack', nasA:19, nasB:19.2, sell:35.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'MIN 20', remarkB:'', compPrice:'29.00', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
+  { format:'35mm', name:'Gold 200 (36) 3-pack', nasA:19, nasB:19.2, sell:35, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'MIN 20', remarkB:'', compPrice:'29.00', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Ilford XP2 400 (36)', nasA:6.694, nasB:7.051, sell:9.99, stock:0, supplierChoice:null, supNameA:'Ilford', supNameB:null, remarkA:'', remarkB:'', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
-  { format:'35mm', name:'Fuji 200', nasA:8.11, nasB:8.143, sell:12.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'12.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
+  { format:'35mm', name:'Fuji 200', nasA:8.11, nasB:8.11, sell:12.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'12.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Ultramax 400 (36)', nasA:7.93, nasB:7.876, sell:13.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'IN 10', remarkB:'IN 10', compPrice:'13.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Candido 800', nasA:0, nasB:9.502, sell:14.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'16', compShop:'AW', hasSupA:false, hasSupB:true, notes:'' },
   { format:'35mm', name:'Fuji 400', nasA:9.2, nasB:8.848, sell:14.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'13.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
@@ -360,7 +365,7 @@ const products = [
   { format:'35mm', name:'Colorplus 200 (36)', nasA:6.55, nasB:6.543, sell:9.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'MIN 20', remarkB:'MIN 10', compPrice:'10.99', compShop:'Harrison Cameras', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Fomapan 400 (36)', nasA:3.99, nasB:3.84, sell:6.99, stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'6.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'120', name:'Fomapan 200 (120)', nasA:3.79, nasB:3.73, sell:6.99, stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'6.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
-  { format:'120', name:'Fomapan 400 (120)', nasA:3.79, nasB:3.73, sell:6.99, stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true, notes:'' },
+  { format:'120', name:'Fomapan 400 (120)', nasA:3.99, nasB:3.99, sell:6.99, stock:0, supplierChoice:null, supNameA:'SJF', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Portra 160 (5 pack)', nasA:56.47, nasB:57.15, sell:74.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'89.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Portra 400 (5 pack)', nasA:64.85, nasB:64.81, sell:89.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'99.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'35mm', name:'Proimage 100 (5 pack)', nasA:40.27, nasB:40.74, sell:60, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'70', compShop:'AW', hasSupA:true, hasSupB:true, notes:'' },
@@ -388,7 +393,7 @@ const products = [
   { format:'polaroid', name:'Polaroid 600', nasA:12.66, nasB:12.66, sell:18.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'\u00a312.03 in 12', remarkB:'\u00a312.03 in 12', compPrice:'21.99', compShop:'Harrison', hasSupA:true, hasSupB:true, notes:'' },
   { format:'polaroid', name:'Polaroid i-Type', nasA:11.33, nasB:11.33, sell:15.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'\u00a310.76 in 12', remarkB:'\u00a310.76 in 12', compPrice:'17.5', compShop:'', hasSupA:true, hasSupB:true, notes:'' },
   { format:'camera', name:'Lomography Apparat', nasA:46.3, nasB:0, sell:89, stock:0, supplierChoice:null, supNameA:'Lomography', supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:true, hasSupB:false, notes:'' },
-  { format:'camera', name:'Kodak Ultra F8', nasA:10, nasB:19.99, sell:30.99, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:false, hasSupB:true, notes:'' },
+  { format:'camera', name:'Kodak Ultra F8', nasA:10, nasB:19.99, sell:33, stock:0, supplierChoice:null, supNameA:null, supNameB:null, remarkA:'', remarkB:'', compPrice:'', compShop:'', hasSupA:false, hasSupB:true, notes:'' },
 ];
 
 const STORAGE_KEY = 'filmTrackerProducts_v6';
@@ -610,6 +615,9 @@ function renderKey() {
     const nasBInput = p.hasSupB !== false
       ? `<input type="number" class="price-input-mini ${p.nasB < p.nasA ? 'price-best-b' : ''}" value="${p.nasB.toFixed(3)}" step="0.001" min="0" onchange="mUpdateNasB(${i},this.value)" />`
       : '<span class="mono-muted">—</span>';
+    const diffBox = (p.hasSupA !== false && p.hasSupB !== false)
+      ? `<span class="sup-diff-box">Δ £${Math.abs(p.nasA - p.nasB).toFixed(3)}</span>`
+      : '';
 
     const pBadge = (profit, margin) => {
       const cls = profit >= 3 ? 'green' : profit >= 0.5 ? 'amber' : 'red';
@@ -634,6 +642,7 @@ function renderKey() {
               <span class="price-tag">${labelB}</span>${nasBInput}
             </div>
           </div>
+          ${diffBox}
           <div class="price-col" style="margin-left:auto;border-left:2px solid var(--border);padding-left:16px;">
             <div class="price-group">
               <span class="price-tag" style="color:var(--accent);">Sell</span>
